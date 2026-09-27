@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>弹窗广告 · Popunder · 武韵</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpaper_legends_the_rampage/wallpaper_minecraft_Modular_C_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 0; }
+    .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .page-header {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;
+    }
+    .page-header h1 { font-size: 1.8rem; color: #ffd966; }
+    .page-header .sub { color: #aaa; font-size: 1rem; }
+    .back-link { color: #7cb518; text-decoration: none; margin-right: auto; font-weight: 600; }
+    .back-link i { margin-right: 6px; }
+    .ad-provider-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    .provider-card {
+      background: rgba(30,40,35,0.85); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 1.5rem 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column;
+    }
+    .provider-card:hover { transform: translateY(-4px); border-color: rgba(124,181,24,0.5); }
+    .provider-icon { font-size: 2.4rem; margin-bottom: 0.5rem; }
+    .provider-name { font-size: 1.2rem; font-weight: 700; color: #a3e635; margin-bottom: 0.2rem; }
+    .provider-desc { font-size: 0.85rem; color: #bbb; margin-bottom: 0.6rem; line-height: 1.4; }
+    .provider-meta {
+      display: flex; justify-content: space-between; font-size: 0.75rem;
+      color: #888; margin: 0.5rem 0 0.8rem;
+    }
+    .ad-status {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin: 6px 0 10px;
+      font-size: 0.85rem;
+      color: #ccc;
+      display: none;
+      border-left: 3px solid #7cb518;
+    }
+    .ad-status.show { display: block; }
+    .ad-status .fa-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .provider-btn {
+      width: 100%; padding: 10px 0; border: none; border-radius: 30px;
+      background: linear-gradient(95deg, #7cb518, #5a9e0e); color: #fff;
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+      margin-top: 6px;
+    }
+    .provider-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .provider-btn:hover:not(:disabled) { box-shadow: 0 0 12px rgba(124,181,24,0.5); }
+    .provider-btn .fa-spinner { animation: spin 1s linear infinite; }
+
+    .coming-soon { opacity: 0.6; pointer-events: none; }
+    .empty-hint {
+      grid-column: 1 / -1; text-align: center; padding: 3rem 0;
+      color: #666; font-size: 1.1rem;
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #ffd966; padding: 12px 28px;
+      border-radius: 40px; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      font-weight: 500; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .page-footer {
+      margin-top: 2.5rem; text-align: center; color: #555; font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="/points-earn.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回赚积分</a>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:2rem;">📲</span>
+        <div>
+          <h1>弹窗广告 · Popunder</h1>
+          <div class="sub">点击下方按钮加载广告，浏览后即可获得积分</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-provider-grid" id="providerGrid">
+      <!-- 由 JS 动态生成 -->
+    </div>
+
+    <div class="page-footer">
+      <i class="fas fa-shield-alt"></i> 广告内容由第三方提供，完成即可获得积分
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function() {
+      // ========== 配置 ==========
+      const MULTI_TAG_SCRIPT = 'https://quge5.com/88/tag.min.js';
+      const ZONE_ID = '257773';
+      const GAME_AD_URL = 'https://idealistic-revenue.com/bI3/V.0pPp3/p/vtbvmFVeJdZjDW0_3CMnjYEy2dOWTEA/xQLNT/cvytMGT_Y/5dM/DRUW';
+
+      // ========== DOM 引用 ==========
+      const grid = document.getElementById('providerGrid');
+      const toast = document.getElementById('toast');
+
+      // ========== 工具函数 ==========
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 3500);
+      }
+
+      function setStatus(index, html, type) {
+        const el = document.getElementById('status_' + index);
+        if (!el) return;
+        el.innerHTML = html;
+        el.className = 'ad-status show';
+        if (type === 'error') el.style.borderLeftColor = '#ef4444';
+        else if (type === 'success') el.style.borderLeftColor = '#22c55e';
+        else el.style.borderLeftColor = '#f59e0b';
+      }
+
+      function claimPoints(adName, bonus) {
+        showToast(`✅ 从「${adName}」获得 +${bonus} 积分！`);
+      }
+
+      // ========== 广告商配置 ==========
+      const providers = [
+        {
+          id: 'monetag_multitag',
+          name: 'Monetag 智能广告',
+          desc: '集成 Popunder + In-Page Push + Vignette + Push 通知，自动匹配最优广告',
+          bonus: '15~30',
+          icon: '🚀',
+          type: 'multitag'
+        },
+        {
+          id: 'game_ad',
+          name: 'EatCells 游戏广告',
+          desc: '点击后打开游戏页面，浏览后领取积分',
+          bonus: '20',
+          icon: '🎮',
+          type: 'jump'
+        },
+        {
+          id: 'future',
+          name: '更多广告类型即将上线',
+          desc: '后续接入更多优质广告渠道',
+          bonus: '敬请期待',
+          icon: '🔮',
+          isFuture: true
+        }
+      ];
+
+      // ========== 渲染卡片 ==========
+      grid.innerHTML = providers.map((p, index) => {
+        if (p.isFuture) {
+          return `
+            <div class="provider-card coming-soon">
+              <div class="provider-icon">${p.icon}</div>
+              <div class="provider-name">${p.name}</div>
+              <div class="provider-desc">${p.desc}</div>
+              <div class="provider-meta">
+                <span><i class="fas fa-coins" style="color:#ffd966;"></i> +${p.bonus}</span>
+                <span><i class="far fa-clock"></i> 即将开放</span>
+              </div>
+              <button class="provider-btn" disabled>
+                <i class="fas fa-hourglass-half"></i> 敬请期待
+              </button>
+            </div>
+          `;
+        }
+        return `
+          <div class="provider-card">
+            <div class="provider-icon">${p.icon}</div>
+            <div class="provider-name">${p.name}</div>
+            <div class="provider-desc">${p.desc}</div>
+            <div class="provider-meta">
+              <span><i class="fas fa-coins" style="color:#ffd966;"></i> +${p.bonus}</span>
+              <span><i class="far fa-clock"></i> ${p.type === 'multitag' ? '点击加载' : '点击跳转'}</span>
+            </div>
+            <div class="ad-status" id="status_${index}"></div>
+            <button class="provider-btn" data-index="${index}">
+              <i class="fas fa-play-circle"></i> ${p.type === 'multitag' ? '启用广告' : '打开广告'}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // ========== 加载 MultiTag 广告 ==========
+      function loadMultiTag() {
+        return new Promise((resolve, reject) => {
+          const oldScript = document.querySelector(`script[src*="${MULTI_TAG_SCRIPT}"]`);
+          if (oldScript) oldScript.remove();
+
+          const script = document.createElement('script');
+          script.src = MULTI_TAG_SCRIPT + '?z=' + ZONE_ID;
+          script.setAttribute('data-zone', ZONE_ID);
+          script.async = true;
+          script.setAttribute('data-cfasync', 'false');
+
+          const timer = setTimeout(() => {
+            reject(new Error('加载超时，请检查网络'));
+          }, 10000);
+
+          script.onload = function() {
+            clearTimeout(timer);
+            resolve(true);
+          };
+          script.onerror = function() {
+            clearTimeout(timer);
+            reject(new Error('脚本加载失败，可能被拦截'));
+          };
+
+          document.head.appendChild(script);
+        });
+      }
+
+      // ========== 跳转型广告：打开链接 ==========
+      function openJumpAd(url) {
+        return new Promise((resolve, reject) => {
+          const win = window.open(url, '_blank');
+          if (!win || win.closed) {
+            reject(new Error('弹窗被拦截，请允许弹出窗口'));
+          } else {
+            resolve(true);
+          }
+        });
+      }
+
+      // ========== 绑定按钮事件 ==========
+      grid.querySelectorAll('.provider-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (this.disabled) return;
+
+          const index = parseInt(this.dataset.index);
+          const provider = providers[index];
+          if (!provider || provider.isFuture) return;
+
+          // ----- 跳转型广告（游戏） -----
+          if (provider.type === 'jump') {
+            if (this.dataset.loaded === 'true') {
+              if (this.dataset.step !== 'claimed') {
+                claimPoints(provider.name, provider.bonus);
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-check"></i> 已领取';
+                this.dataset.step = 'claimed';
+                setStatus(index, `🎉 积分已到账！`, 'success');
+              }
+              return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 打开中...';
+            setStatus(index, '<i class="fas fa-spinner fa-spin"></i> 正在打开广告页面...', 'info');
+
+            openJumpAd(GAME_AD_URL)
+              .then(() => {
+                setStatus(index, `✅ 广告已打开！浏览后返回点击「领取积分」`, 'success');
+                showToast('✅ 广告页面已打开');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-circle"></i> 领取积分';
+                this.dataset.loaded = 'true';
+                this.dataset.step = 'ready';
+                this.onclick = function(e2) {
+                  e2.preventDefault();
+                  if (this.disabled) return;
+                  if (this.dataset.step === 'claimed') return;
+                  claimPoints(provider.name, provider.bonus);
+                  this.disabled = true;
+                  this.innerHTML = '<i class="fas fa-check"></i> 已领取';
+                  this.dataset.step = 'claimed';
+                  setStatus(index, `🎉 积分已到账！`, 'success');
+                };
+              })
+              .catch(err => {
+                console.warn('打开失败:', err);
+                setStatus(index, `❌ 打开失败：${err.message}<br>请允许弹出窗口后重试`, 'error');
+                showToast('❌ 广告打开失败，请允许弹出窗口');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-redo"></i> 重试';
+              });
+            return;
+          }
+
+          // ----- MultiTag 广告 -----
+          if (this.dataset.loaded === 'true') {
+            showToast('⏳ 广告已激活，请点击页面任意位置或链接触发');
+            return;
+          }
+
+          this.disabled = true;
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
+          setStatus(index, '<i class="fas fa-spinner fa-spin"></i> 正在加载广告脚本...', 'info');
+
+          loadMultiTag()
+            .then(() => {
+              setStatus(index, `✅ 广告已激活！<br>点击页面任意位置或链接即可触发广告`, 'success');
+              showToast('✅ MultiTag 广告加载成功');
+              this.disabled = true;
+              this.innerHTML = '<i class="fas fa-check"></i> 已激活';
+              this.dataset.loaded = 'true';
+            })
+            .catch(err => {
+              console.warn('加载失败:', err);
+              setStatus(index, `❌ 加载失败：${err.message}<br>请刷新页面重试`, 'error');
+              showToast('❌ 广告加载失败，请刷新重试');
+              this.disabled = false;
+              this.innerHTML = '<i class="fas fa-redo"></i> 重试';
+            });
+        });
+      });
+
+      // ========== 页面加载后引导 ==========
+      setTimeout(() => {
+        showToast('💡 点击「启用广告」或「打开广告」开始赚积分');
+      }, 600);
+    })();
+  </script>
+</body>
+</html>

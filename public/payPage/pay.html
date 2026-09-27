@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="zh-cn">
+    <meta name="apple-mobile-web-app-capable" content="no">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no, email=no">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>扫码支付</title>
+    <link href="pay.css" rel="stylesheet" media="screen">
+    <script src="https://lib.baomitu.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://lib.baomitu.com/vue/2.5.21/vue.min.js"></script>
+    <style>
+        .hidden { display: none; }
+        #timeOut { font-size: 20px; color: red; display: none; }
+        #orderbody .time-item strong { margin-right: 8px; }
+        .qrcode-img-area { text-align: center; }
+        .tip, .foot { margin-top: 16px; }
+        
+        /* 二维码加载失败样式 */
+        .qrcode-fallback {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .qrcode-fallback a {
+            color: #007bff;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .qrcode-fallback a:hover {
+            text-decoration: underline;
+        }
+        .copy-link-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .copy-link-btn:hover {
+            background: #218838;
+        }
+        
+        /* 提示浮窗 */
+        .copy-toast {
+            position: fixed;
+            bottom: 70px;
+            right: 30px;
+            background: #2c3e2c;
+            color: #c6ffb3;
+            padding: 6px 14px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 10001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            pointer-events: none;
+            animation: fadeOut 1.5s forwards;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(-12px); visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="body">
+    <h1 class="mod-title">
+        <span class="ico_log ico-1" v-if="payType == 1"></span>
+        <span class="ico_log ico-2" v-if="payType == 2"></span>
+    </h1>
+
+    <div class="mod-ct">
+        <!-- 过期提示区块 -->
+        <div id="timeOut" class="amount" style="font-size: 20px; color: red; display: none;">
+            <p>订单已过期，请您返回网站重新发起支付</p><br>
+        </div>
+
+        <!-- 主体内容，过期时会隐藏 -->
+        <div id="orderbody" :style="isExpired ? 'display: none;' : ''">
+            <div class="amount" id="money">￥{{ reallyPrice }}</div>
+
+            <div class="qrcode-img-wrapper" data-role="qrPayImgWrapper">
+                <div class="qrcode-img-area" data-role="qrPayImg">
+                    <div class="ui-loading qrcode-loading" data-role="qrPayImgLoading" style="display: none;">加载中</div>
+                    <div style="position: relative; display: inline-block;" v-if="!qrCodeError">
+                        <img 
+                            id="show_qrcode" 
+                            alt="支付二维码" 
+                            :src="'/api/pay/enQrcode?url=' + encodeURIComponent(payUrl)" 
+                            width="210" 
+                            height="210" 
+                            style="display: block;"
+                            @error="handleQRCodeError"
+                            @load="handleQRCodeLoad">
+                    </div>
+                    <div v-else class="qrcode-fallback">
+                        <p style="color: red; margin-bottom: 10px;">⚠️ 二维码加载失败</p>
+                        <p style="word-break: break-all; margin: 10px 0;">
+                            <strong>支付链接：</strong><br>
+                            <a :href="payUrl" target="_blank">{{ payUrl }}</a>
+                        </p>
+                        <button class="copy-link-btn" @click="copyPayUrl">📋 复制支付链接</button>
+                        <p style="font-size: 12px; margin-top: 10px; color: #666;">
+                            请复制链接到浏览器打开完成支付
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 倒计时区域 -->
+            <div class="time-item">
+                <!-- 删除了红色提示文字 -->
+                <div id="msg"></div>
+                <strong id="hour_show">0时</strong>
+                <strong id="minute_show">0分</strong>
+                <strong id="second_show">0秒</strong>
+            </div>
+
+            <div class="tip">
+                <div class="ico-scan"></div>
+                <div class="tip-text">
+                    <p>请使用{{ payTypeName }}扫一扫</p>
+                    <p>扫描二维码完成支付</p>
+                </div>
+            </div>
+
+            <div class="detail" id="orderDetail">
+                <dl class="detail-ct" id="desc" style="display: none;">
+                    <dt>金额</dt>
+                    <dd>{{ price }}</dd>
+                    <dt>商户订单：</dt>
+                    <dd>{{ payId }}</dd>
+                    <dt>创建时间：</dt>
+                    <dd>{{ formatDate(date) }}</dd>
+                    <dt>状态</dt>
+                    <dd>等待支付</dd>
+                </dl>
+                <a href="javascript:void(0)" class="arrow" @click="toggleDetail"><i class="ico-arrow"></i></a>
+            </div>
+        </div>
+
+        <div class="tip-text"></div>
+    </div>
+
+    <div class="foot">
+        <div class="inner">
+            <p>手机用户可保存上方二维码到手机中</p>
+            <p>在{{ payTypeName }}扫一扫中选择“相册”即可</p>
+        </div>
+    </div>
+    <div class="copyRight"></div>
+</div>
+
+<script>
+    // 全局变量
+    let myTimer = null;
+    let pollingTimer = null;
+    let orderExpired = false;
+    
+    // 工具函数
+    function getQueryParam(name) {
+        const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        const r = window.location.search.substr(1).match(reg);
+        return r ? decodeURIComponent(r[2]) : null;
+    }
+    
+    function formatDateFromTimestamp(timestampSec) {
+        const date = new Date(timestampSec * 1000);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    function showCopyToast(message) {
+        const existingToast = document.querySelector('.copy-toast');
+        if(existingToast) existingToast.remove();
+        const toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            if(toast && toast.remove) toast.remove();
+        }, 1600);
+    }
+    
+    // 倒计时函数 - 直接从参考代码复制
+    function timer(intDiff) {
+        var i = 0;
+        i++;
+        var day = 0,
+            hour = 0,
+            minute = 0,
+            second = 0;//时间默认值
+        if (intDiff > 0) {
+            day = Math.floor(intDiff / (60 * 60 * 24));
+            hour = Math.floor(intDiff / (60 * 60)) - (day * 24);
+            minute = Math.floor(intDiff / 60) - (day * 24 * 60) - (hour * 60);
+            second = Math.floor(intDiff) - (day * 24 * 60 * 60) - (hour * 60 * 60) - (minute * 60);
+        }
+        if (minute <= 9) minute = '0' + minute;
+        if (second <= 9) second = '0' + second;
+        $('#hour_show').html('<s id="h"></s>' + hour + '时');
+        $('#minute_show').html('<s></s>' + minute + '分');
+        $('#second_show').html('<s></s>' + second + '秒');
+        if (hour <= 0 && minute <= 0 && second <= 0) {
+            qrcode_timeout();
+            clearInterval(myTimer);
+        }
+        intDiff--;
+
+        myTimer = window.setInterval(function () {
+            i++;
+            var day = 0,
+                hour = 0,
+                minute = 0,
+                second = 0;//时间默认值
+            if (intDiff > 0) {
+                day = Math.floor(intDiff / (60 * 60 * 24));
+                hour = Math.floor(intDiff / (60 * 60)) - (day * 24);
+                minute = Math.floor(intDiff / 60) - (day * 24 * 60) - (hour * 60);
+                second = Math.floor(intDiff) - (day * 24 * 60 * 60) - (hour * 60 * 60) - (minute * 60);
+            }
+            if (minute <= 9) minute = '0' + minute;
+            if (second <= 9) second = '0' + second;
+            $('#hour_show').html('<s id="h"></s>' + hour + '时');
+            $('#minute_show').html('<s></s>' + minute + '分');
+            $('#second_show').html('<s></s>' + second + '秒');
+            if (hour <= 0 && minute <= 0 && second <= 0) {
+                qrcode_timeout();
+                clearInterval(myTimer);
+            }
+            intDiff--;
+        }, 1000);
+    }
+    
+    // 订单过期处理
+    function qrcode_timeout() {
+        if (orderExpired) return;
+        orderExpired = true;
+        document.getElementById("orderbody").style.display = "none";
+        document.getElementById("timeOut").style.display = "block";
+        if (pollingTimer) clearTimeout(pollingTimer);
+        if (myTimer) clearInterval(myTimer);
+    }
+    
+    // 订单状态轮询
+    function checkOrder(payId) {
+        if (orderExpired) return;
+        
+        $.ajax({
+            url: "/api/pay/checkOrder",
+            type: "GET",
+            data: { payId: payId },
+            success: function(response) {
+                if (response.code === 1 && response.data) {
+                    var d = response.data;
+                    var url = (typeof d === 'object' && d !== null && d.redirect) ? d.redirect : d;
+                    window.location.href = url;
+                    return;
+                }
+                if (response.data === "订单已过期") {
+                    qrcode_timeout();
+                    return;
+                }
+                pollingTimer = setTimeout(function() {
+                    checkOrder(payId);
+                }, 1500);
+            },
+            error: function() {
+                pollingTimer = setTimeout(function() {
+                    checkOrder(payId);
+                }, 2000);
+            }
+        });
+    }
+    
+    // 获取订单详情
+    function initPaymentPage() {
+        const payId = getQueryParam("payId");
+        
+        if (!payId) {
+            qrcode_timeout();
+            return;
+        }
+        
+        $.ajax({
+            url: "/api/pay/getOrder",
+            type: "GET",
+            data: { payId: payId },
+            success: function(response) {
+                if (response.code === 1 && response.data) {
+                    const order = response.data;
+                    
+                    // 计算剩余时间
+                    var nowTime = new Date().getTime() / 1000;
+                    var elapsedTime = nowTime - order.date;
+                    var remainingTime = order.timeOut * 60 - elapsedTime;
+                    
+                    if (order.state == -1 || remainingTime <= 0) {
+                        remainingTime = 0;
+                    }
+                    
+                    // 启动倒计时
+                    timer(Math.max(0, remainingTime));
+                    
+                    // 设置支付方式名称
+                    var payTypeName = order.payType == 1 ? '微信' : (order.payType == 2 ? '支付宝' : '支付');
+                    
+                    // 初始化Vue
+                    new Vue({
+                        el: '#app',
+                        data: {
+                            payId: order.payId,
+                            price: order.price,
+                            reallyPrice: order.reallyPrice,
+                            payType: order.payType,
+                            payTypeName: payTypeName,
+                            payUrl: order.payUrl,
+                            date: order.date,
+                            isExpired: remainingTime <= 0,
+                            qrCodeError: false
+                        },
+                        methods: {
+                            formatDate: function(timestamp) {
+                                return formatDateFromTimestamp(timestamp);
+                            },
+                            toggleDetail: function() {
+                                var desc = document.getElementById('desc');
+                                if (desc) {
+                                    if (desc.style.display === 'none') {
+                                        desc.style.display = 'block';
+                                    } else {
+                                        desc.style.display = 'none';
+                                    }
+                                }
+                            },
+                            handleQRCodeLoad: function() {
+                                this.qrCodeError = false;
+                            },
+                            handleQRCodeError: function() {
+                                this.qrCodeError = true;
+                            },
+                            copyPayUrl: function() {
+                                if (this.payUrl) {
+                                    navigator.clipboard.writeText(this.payUrl).then(() => {
+                                        showCopyToast('✅ 支付链接已复制');
+                                    }).catch(() => {
+                                        const textarea = document.createElement('textarea');
+                                        textarea.value = this.payUrl;
+                                        document.body.appendChild(textarea);
+                                        textarea.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(textarea);
+                                        showCopyToast('✅ 支付链接已复制');
+                                    });
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 启动轮询
+                    if (remainingTime > 0) {
+                        checkOrder(payId);
+                    } else {
+                        qrcode_timeout();
+                    }
+                } else {
+                    qrcode_timeout();
+                }
+            },
+            error: function() {
+                qrcode_timeout();
+            }
+        });
+    }
+    
+    // 页面启动
+    $(document).ready(function() {
+        initPaymentPage();
+    });
+</script>
+</body>
+</html>

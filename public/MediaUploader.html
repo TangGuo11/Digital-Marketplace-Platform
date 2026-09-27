@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传作品 · 武韵工作室 · 对接后端</title>
+    <!-- 柔和现代字体 Inter & 清爽图标 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== 原有样式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #e8f3e8 0%, #d9ead9 100%);
+            font-family: "Inter", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            color: #1f3b2c;
+        }
+
+        .card {
+            max-width: 1000px;   /* 加宽以容纳表格 */
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px -20px rgba(30, 70, 40, 0.25),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(200, 230, 200, 0.6);
+            padding: 2.4rem 2.8rem;
+            transition: all 0.25s ease;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2.2rem;
+        }
+
+        .header h2 {
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.02em;
+            color: #1e4a2e;
+            margin-right: auto;
+        }
+
+        .form-section {
+            background: rgba(245, 255, 240, 0.6);
+            border-radius: 28px;
+            padding: 1.6rem 1.8rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid rgba(200, 235, 190, 0.8);
+            box-shadow: 0 6px 14px rgba(40, 80, 40, 0.04);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 550;
+            font-size: 1.2rem;
+            color: #27633b;
+            margin-bottom: 1.3rem;
+        }
+
+        .section-title i {
+            color: #3f8b5a;
+            font-size: 1.25rem;
+        }
+
+        .field {
+            margin-bottom: 1.5rem;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+            color: #2a6a3d;
+        }
+
+        .field-label i {
+            color: #4a9b67;
+            width: 20px;
+            font-size: 1rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.9rem 1.3rem;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1.5px solid #c0e0bc;
+            border-radius: 22px;
+            font-family: 'Inter', sans-serif;
+            transition: 0.15s;
+            outline: none;
+            color: #1c4a2a;
+        }
+
+        .input-field:focus {
+            border-color: #7fc28a;
+            background: white;
+            box-shadow: 0 6px 16px rgba(90, 160, 100, 0.15);
+        }
+
+        .input-field::placeholder {
+            color: #88aa88;
+            opacity: 0.7;
+        }
+
+        textarea.input-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .bili-hint {
+            font-size: 0.75rem;
+            color: #6c9e7a;
+            margin-top: 0.4rem;
+            margin-left: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bili-hint i {
+            font-size: 0.7rem;
+        }
+
+        .bili-preview {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(210, 235, 205, 0.5);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #2a6a3d;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid #5faf6f;
+        }
+
+        .bili-preview i {
+            font-size: 1rem;
+        }
+
+        .bili-preview.show {
+            display: flex;
+        }
+
+        .media-zone {
+            background: rgba(230, 250, 225, 0.6);
+            border-radius: 24px;
+            padding: 1.2rem 1.2rem 1.2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border: 1.5px dashed #aad4aa;
+            transition: background 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .media-zone:hover {
+            background: rgba(215, 245, 210, 0.8);
+            border-color: #5faF6f;
+        }
+
+        .media-icon {
+            font-size: 2rem;
+            color: #4b8e5c;
+            margin-right: 0.2rem;
+        }
+
+        .media-text {
+            flex: 1;
+        }
+
+        .media-text .main {
+            font-weight: 600;
+            color: #2a723f;
+            margin-bottom: 4px;
+        }
+
+        .media-text .sub {
+            font-size: 0.85rem;
+            color: #4f8862;
+        }
+
+        .file-count-badge {
+            background: white;
+            border-radius: 40px;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2b6a3c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid #b8dcb5;
+            white-space: nowrap;
+        }
+
+        .file-preview-grid {
+            margin-top: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .media-thumb-card {
+            width: 100px;
+            height: 100px;
+            border-radius: 16px;
+            background: #f0f8ec;
+            border: 1.5px solid #c0e0bc;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(40, 80, 30, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .thumb-container {
+            width: 100%;
+            height: 70px;
+            background: #d9ead9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .thumb-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumb-container i {
+            font-size: 2rem;
+            color: #7fb07f;
+        }
+
+        .video-play-icon {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-info {
+            height: 28px;
+            padding: 0 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+            color: #2a6a3d;
+            border-top: 1px solid #d0e8d0;
+        }
+
+        .file-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 60px;
+        }
+
+        .remove-file-btn {
+            color: #9ac09a;
+            cursor: pointer;
+            transition: color 0.1s;
+            font-size: 0.8rem;
+            padding: 2px;
+        }
+
+        .remove-file-btn:hover {
+            color: #cf5a5a;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.9rem 2.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: white;
+            color: #2d6b41;
+            border: 1.5px solid #b8dcb5;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(40, 80, 30, 0.03);
+        }
+
+        .btn-primary {
+            background: #3d8b54;
+            color: white;
+            border: 1.5px solid #2f7444;
+            box-shadow: 0 10px 18px -6px rgba(70, 150, 90, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #4fa368;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary:hover {
+            background: #e4f5e0;
+            border-color: #9fcd9f;
+        }
+
+        .toast-message {
+            margin-top: 1rem;
+            border-radius: 40px;
+            padding: 0.7rem 1.5rem;
+            background: #e4f5e0;
+            color: #2d6b41;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #b8dcb5;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+        }
+
+        .toast-message.error {
+            background: #ffeee5;
+            color: #b35f5f;
+            border-color: #f0cfc0;
+        }
+
+        .toast-message.success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .toast-message i {
+            font-size: 1.1rem;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #b8d5b0, transparent);
+            margin: 1.8rem 0;
+        }
+
+        .success-animation {
+            animation: successPulse 0.5s ease;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .input-field.bilibili-valid {
+            border-color: #5faf6f;
+            background: rgba(95, 175, 111, 0.05);
+        }
+
+        .input-field.bilibili-invalid {
+            border-color: #e6a3a3;
+            background: rgba(230, 163, 163, 0.05);
+        }
+
+        /* ===== 新增：作品管理表格样式 ===== */
+        #productManagement {
+            margin-top: 2rem;
+        }
+
+        #productManagement h2 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            color: #1e4a2e;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        #productManagement h2 i {
+            color: #4f9a64;
+        }
+
+        .product-table-wrap {
+            overflow-x: auto;
+            background: rgba(245, 255, 240, 0.5);
+            border-radius: 28px;
+            padding: 0.2rem 0.2rem 0.2rem 0.2rem;
+            border: 1px solid rgba(200, 235, 190, 0.6);
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 600px;
+        }
+
+        .product-table th {
+            text-align: left;
+            padding: 1rem 1.2rem;
+            background: rgba(200, 230, 200, 0.3);
+            color: #1f4a2a;
+            font-weight: 600;
+            border-bottom: 2px solid #b8d5b0;
+        }
+
+        .product-table td {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid #d0e8d0;
+            vertical-align: middle;
+        }
+
+        .product-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-table .product-title {
+            font-weight: 500;
+            color: #1c4a2a;
+        }
+
+        .product-table .product-price {
+            font-weight: 500;
+            color: #2a6a3d;
+        }
+
+        .product-table .points-input {
+            width: 100px;
+            padding: 0.4rem 0.7rem;
+            border: 1.5px solid #c0e0bc;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .product-table .points-input:focus {
+            border-color: #7fc28a;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(90, 160, 100, 0.15);
+        }
+
+        .product-table .btn-sm {
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            border: 1.5px solid #b8dcb5;
+            background: white;
+            color: #2d6b41;
+            cursor: pointer;
+            transition: 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-table .btn-sm:hover {
+            background: #e4f5e0;
+            border-color: #9fcd9f;
+        }
+
+        .product-table .btn-sm.btn-primary-sm {
+            background: #3d8b54;
+            color: white;
+            border-color: #2f7444;
+        }
+
+        .product-table .btn-sm.btn-primary-sm:hover {
+            background: #4fa368;
+        }
+
+        .product-table .btn-sm.btn-outline-sm {
+            background: transparent;
+            border-color: #aad4aa;
+        }
+
+        .product-table .btn-sm.btn-outline-sm:hover {
+            background: #e8f5e8;
+        }
+
+        .product-table .action-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* 空状态提示 */
+        .empty-products {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #6c9e7a;
+            font-style: italic;
+        }
+
+        .empty-products i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.6rem;
+            color: #aad4aa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2><i class="fas fa-cloud-upload-alt" style="margin-right: 10px; color: #4f9a64;"></i> 上传作品</h2>
+    </div>
+
+    <!-- 作品信息部分 -->
+    <div class="form-section">
+        <div class="section-title">
+            <i class="fas fa-info-circle"></i>
+            <span>作品信息</span>
+        </div>
+
+        <div class="field">
+            <div class="field-label"><i class="fas fa-heading"></i> 标题</div>
+            <input type="text" class="input-field" id="title" placeholder="请输入标题" value="">
+        </div>
+
+        <div class="field">
+            <div class="field-label"><i class="fas fa-tag"></i> 价格</div>
+            <input type="number" step="0.01" min="0" class="input-field" id="price" placeholder="输入作品价格" value="">
+            <div style="margin-top: 0.6rem;">
+                <label class="field-label" style="margin-bottom: 0.2rem;"><i class="fas fa-coins"></i> 积分兑换价格（可选）</label>
+                <input type="number" step="1" min="0" class="input-field" id="pointsPrice" placeholder="例如 500 积分">
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="field-label"><i class="fas fa-align-left"></i> 介绍</div>
+            <textarea class="input-field" id="desc" placeholder="请描述你的作品……"></textarea>
+        </div>
+
+        <!-- B站视频链接 -->
+        <div class="field">
+            <div class="field-label"><i class="fab fa-bilibili"></i> B站视频链接</div>
+            <input type="text" class="input-field" id="bilibiliUrl" placeholder="https://www.bilibili.com/video/BVxxxxxx 或 BV号" value="">
+            <div class="bili-hint">
+                <i class="fas fa-lightbulb"></i> 支持标准B站视频链接或直接输入BV号，非必填
+            </div>
+            <div class="bili-preview" id="biliPreview">
+                <i class="fab fa-bilibili"></i> <span id="biliPreviewText">已识别B站视频，前端将展示播放器</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 媒体上传区域 -->
+    <div class="form-section">
+        <div class="section-title">
+            <i class="fas fa-play-circle"></i>
+            <span>作品介绍媒体组 · 图片 / 视频</span>
+        </div>
+
+        <div class="media-zone" id="mediaZone">
+            <i class="fas fa-cloud-upload-alt media-icon"></i>
+            <div class="media-text">
+                <div class="main">点击选择 或 拖拽文件至此</div>
+                <div class="sub">支持图片 / 视频，可多选</div>
+            </div>
+            <div class="file-count-badge" id="fileCounter">0 个文件</div>
+        </div>
+
+        <input type="file" id="files" class="hidden-input" multiple accept="image/*,video/*">
+
+        <div class="file-preview-grid" id="filePreviewGrid"></div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast-message" id="toastMessage">
+        <i class="fas fa-check-circle"></i> <span></span>
+    </div>
+
+    <hr>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar">
+        <button class="btn btn-secondary" id="clearAllBtn"><i class="fas fa-eraser"></i> 清空所有</button>
+        <button class="btn btn-primary" id="uploadBtn"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+    </div>
+
+    <!-- ===== 新增：作品管理区域 ===== -->
+    <div id="productManagement">
+        <hr>
+        <h2><i class="fas fa-list-ul"></i> 作品管理</h2>
+        <div class="product-table-wrap">
+            <div id="productList">
+                <!-- 由 JavaScript 动态渲染 -->
+                <div class="empty-products">
+                    <i class="fas fa-box-open"></i>
+                    暂无作品，请上传。
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ===== 原有上传脚本（未改动） ===== */
+    (function() {
+        const titleInput = document.getElementById('title');
+        const priceInput = document.getElementById('price');
+        const descInput = document.getElementById('desc');
+        const bilibiliUrlInput = document.getElementById('bilibiliUrl');
+        const biliPreview = document.getElementById('biliPreview');
+        const biliPreviewText = document.getElementById('biliPreviewText');
+        const fileInput = document.getElementById('files');
+        const mediaZone = document.getElementById('mediaZone');
+        const fileCounter = document.getElementById('fileCounter');
+        const filePreviewGrid = document.getElementById('filePreviewGrid');
+        const toast = document.getElementById('toastMessage');
+        const toastSpan = toast.querySelector('span');
+        const card = document.querySelector('.card');
+
+        let selectedFiles = [];
+
+        function isValidBilibiliUrl(url) {
+            if (!url || url.trim() === '') return true;
+            const pattern = /^https?:\/\/(www\.)?bilibili\.com\/video\/(BV\w+)/i;
+            const bvOnly = /^(BV\w+)$/i;
+            return pattern.test(url) || bvOnly.test(url);
+        }
+
+        function extractBv(url) {
+            if (!url) return null;
+            const trimmed = url.trim();
+            const bvMatch = trimmed.match(/^(BV\w+)$/i);
+            if (bvMatch) return bvMatch[1];
+            const linkMatch = trimmed.match(/video\/(BV\w+)/i);
+            return linkMatch ? linkMatch[1] : null;
+        }
+
+        function toEmbedUrl(bv) {
+            if (!bv) return '';
+            return `https://player.bilibili.com/player.html?bvid=${bv}&autoplay=0&high_quality=1`;
+        }
+
+        function updateBilibiliPreview() {
+            let rawUrl = bilibiliUrlInput.value.trim();
+            if (rawUrl === '') {
+                bilibiliUrlInput.classList.remove('bilibili-valid', 'bilibili-invalid');
+                biliPreview.classList.remove('show');
+                return;
+            }
+            if (isValidBilibiliUrl(rawUrl)) {
+                const bv = extractBv(rawUrl);
+                if (bv) {
+                    bilibiliUrlInput.classList.add('bilibili-valid');
+                    bilibiliUrlInput.classList.remove('bilibili-invalid');
+                    biliPreviewText.innerHTML = `✅ 有效B站视频 (BV号: ${bv})，前端将展示播放器`;
+                    biliPreview.classList.add('show');
+                } else {
+                    bilibiliUrlInput.classList.remove('bilibili-valid');
+                    bilibiliUrlInput.classList.add('bilibili-invalid');
+                    biliPreviewText.innerHTML = `⚠️ 链接格式无效，请检查`;
+                    biliPreview.classList.add('show');
+                }
+            } else {
+                bilibiliUrlInput.classList.remove('bilibili-valid');
+                bilibiliUrlInput.classList.add('bilibili-invalid');
+                biliPreviewText.innerHTML = `❌ B站链接无效，请提供标准格式 (https://www.bilibili.com/video/BVxxx 或 BV号)`;
+                biliPreview.classList.add('show');
+            }
+        }
+
+        bilibiliUrlInput.addEventListener('input', updateBilibiliPreview);
+
+        function getVideoThumbnail(file) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.playsInline = true;
+                video.crossOrigin = 'anonymous';
+                const url = URL.createObjectURL(file);
+                video.src = url;
+                video.onloadedmetadata = function() {
+                    if (video.duration > 0) {
+                        video.currentTime = Math.min(0.1, video.duration / 2);
+                    }
+                };
+                video.onseeked = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 100;
+                        canvas.height = video.videoHeight || 70;
+                        if (canvas.width === 0) canvas.width = 100;
+                        if (canvas.height === 0) canvas.height = 70;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+                        URL.revokeObjectURL(url);
+                        resolve(thumbnail);
+                    } catch (e) {
+                        console.error('视频缩略图绘制失败:', e);
+                        URL.revokeObjectURL(url);
+                        resolve(null);
+                    }
+                };
+                video.onerror = function(e) {
+                    console.error('视频加载错误:', e);
+                    URL.revokeObjectURL(url);
+                    resolve(null);
+                };
+                setTimeout(() => {
+                    if (video) {
+                        URL.revokeObjectURL(url);
+                        resolve(null);
+                    }
+                }, 8000);
+                video.load();
+            });
+        }
+
+        function getImageThumbnail(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function updateFileUI() {
+            const count = selectedFiles.length;
+            fileCounter.innerText = count + ' 个文件';
+            filePreviewGrid.innerHTML = '';
+
+            for (let index = 0; index < selectedFiles.length; index++) {
+                const file = selectedFiles[index];
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'media-thumb-card';
+                const thumbContainer = document.createElement('div');
+                thumbContainer.className = 'thumb-container';
+                thumbContainer.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+                filePreviewGrid.appendChild(cardDiv);
+                cardDiv.appendChild(thumbContainer);
+
+                let thumbnail = null;
+                if (isImage) {
+                    thumbnail = await getImageThumbnail(file);
+                } else if (isVideo) {
+                    thumbnail = await getVideoThumbnail(file);
+                }
+                thumbContainer.innerHTML = '';
+                if (thumbnail) {
+                    const img = document.createElement('img');
+                    img.src = thumbnail;
+                    img.alt = '缩略图';
+                    thumbContainer.appendChild(img);
+                    if (isVideo) {
+                        const playIcon = document.createElement('div');
+                        playIcon.className = 'video-play-icon';
+                        playIcon.innerHTML = '<i class="fas fa-play"></i>';
+                        thumbContainer.appendChild(playIcon);
+                    }
+                } else {
+                    if (isImage) thumbContainer.innerHTML = '<i class="fas fa-image"></i>';
+                    else if (isVideo) thumbContainer.innerHTML = '<i class="fas fa-video"></i>';
+                    else thumbContainer.innerHTML = '<i class="fas fa-file"></i>';
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'file-info';
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.title = file.name;
+                let shortName = file.name;
+                if (shortName.length > 8) shortName = shortName.substring(0, 6) + '…';
+                nameSpan.textContent = shortName;
+                const removeIcon = document.createElement('i');
+                removeIcon.className = 'fas fa-times-circle remove-file-btn';
+                removeIcon.dataset.index = index;
+                infoDiv.appendChild(nameSpan);
+                infoDiv.appendChild(removeIcon);
+                cardDiv.appendChild(infoDiv);
+            }
+
+            document.querySelectorAll('.remove-file-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = btn.getAttribute('data-index');
+                    if (index !== null) removeFile(parseInt(index));
+                });
+            });
+        }
+
+        function removeFile(index) {
+            if (index >= 0 && index < selectedFiles.length) {
+                selectedFiles.splice(index, 1);
+                fileInput.value = '';
+                updateFileUI();
+                showToast('文件已移除', 'info', 1500);
+            }
+        }
+
+        function showToast(text, type = 'info', timeout = 2800) {
+            toastSpan.innerText = text;
+            toast.classList.add('show');
+            toast.classList.remove('error', 'success', 'info');
+            if (type === 'error') {
+                toast.classList.add('error');
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else if (type === 'success') {
+                toast.classList.add('success');
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            } else {
+                toast.classList.add('info');
+                toast.querySelector('i').className = 'fas fa-info-circle';
+            }
+            if (timeout) {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, timeout);
+            }
+        }
+
+        function handleFilesAdd(files) {
+            if (!files || files.length === 0) return;
+            const incoming = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+            if (incoming.length === 0) {
+                showToast('只支持图片或视频文件', 'error');
+                return;
+            }
+            selectedFiles = [...selectedFiles, ...incoming];
+            updateFileUI();
+            showToast(`已添加 ${incoming.length} 个文件`, 'info', 2000);
+            fileInput.value = '';
+        }
+
+        function clearAll() {
+            titleInput.value = '';
+            priceInput.value = '';
+            descInput.value = '';
+            bilibiliUrlInput.value = '';
+            document.getElementById('pointsPrice').value = '';
+            selectedFiles = [];
+            fileInput.value = '';
+            updateFileUI();
+            updateBilibiliPreview();
+            showToast('已清空所有内容', 'info', 1500);
+        }
+
+        function showSuccessUI(message) {
+            showToast(message, 'success', 5000);
+            card.classList.add('success-animation');
+            setTimeout(() => {
+                card.classList.remove('success-animation');
+            }, 500);
+            titleInput.value = '';
+            priceInput.value = '';
+            descInput.value = '';
+            bilibiliUrlInput.value = '';
+            document.getElementById('pointsPrice').value = '';
+            selectedFiles = [];
+            fileInput.value = '';
+            updateFileUI();
+            updateBilibiliPreview();
+            mediaZone.style.backgroundColor = '#e8f8e8';
+            setTimeout(() => {
+                mediaZone.style.backgroundColor = '';
+            }, 1000);
+        }
+
+        const SERVER_BASE = "";
+
+        async function upload() {
+            const title = titleInput.value.trim();
+            const price = priceInput.value.trim();
+            const description = descInput.value.trim();
+            let bilibiliUrl = bilibiliUrlInput.value.trim();
+            const pointsPrice = document.getElementById('pointsPrice')?.value?.trim() || null;
+
+            if (!title || !price || !description) {
+                showToast('请填写标题、价格和介绍', 'error');
+                return;
+            }
+            if (selectedFiles.length === 0) {
+                showToast('请至少选择一个媒体文件', 'error');
+                return;
+            }
+            if (bilibiliUrl && !isValidBilibiliUrl(bilibiliUrl)) {
+                showToast('B站链接格式无效，请检查后重试', 'error');
+                return;
+            }
+            const bv = extractBv(bilibiliUrl);
+            if (bv && bilibiliUrl && !bilibiliUrl.startsWith('http')) {
+                bilibiliUrl = `https://www.bilibili.com/video/${bv}`;
+            }
+
+            try {
+                showToast('正在创建作品...', 'info', 0);
+                const createRes = await fetch(`${SERVER_BASE}/product/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        price: price,
+                        description: description,
+                        bilibiliUrl: bilibiliUrl || "",
+                        pointsPrice: pointsPrice
+                    })
+                });
+                if (!createRes.ok) {
+                    let errorMsg = '创建作品失败';
+                    try {
+                        const errData = await createRes.json();
+                        errorMsg = errData.error || errorMsg;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const createData = await createRes.json();
+                const productId = createData.productId;
+                if (!productId) throw new Error('后端未返回 productId');
+
+                showToast('正在上传媒体文件...', 'info', 0);
+                const formData = new FormData();
+                formData.append('productId', productId);
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    formData.append('files', selectedFiles[i]);
+                }
+                const uploadRes = await fetch(`${SERVER_BASE}/product/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!uploadRes.ok) {
+                    let errorMsg = '媒体上传失败';
+                    try {
+                        const errData = await uploadRes.json();
+                        errorMsg = errData.error || errorMsg;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const uploadData = await uploadRes.json();
+                console.log('上传响应:', uploadData);
+                showSuccessUI(`✅ 上传成功！共 ${uploadData.uploaded || selectedFiles.length} 个文件${bilibiliUrl ? '，已关联B站视频' : ''}`);
+                // 上传成功后刷新作品列表
+                loadProducts();
+            } catch (error) {
+                console.error('上传流程异常:', error);
+                showToast('❌ 上传出错: ' + error.message, 'error', 5000);
+            }
+        }
+
+        mediaZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFilesAdd(e.target.files));
+        document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+        document.getElementById('uploadBtn').addEventListener('click', upload);
+
+        mediaZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            mediaZone.style.background = 'rgba(210, 240, 200, 0.8)';
+            mediaZone.style.borderColor = '#5faf6f';
+        });
+        mediaZone.addEventListener('dragleave', () => {
+            mediaZone.style.background = '';
+            mediaZone.style.borderColor = '#aad4aa';
+        });
+        mediaZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            mediaZone.style.background = '';
+            mediaZone.style.borderColor = '#aad4aa';
+            const files = e.dataTransfer.files;
+            if (files.length) handleFilesAdd(files);
+        });
+
+        updateBilibiliPreview();
+        updateFileUI();
+    })();
+
+    /* ===== 新增：作品管理脚本 ===== */
+    // 使用全局函数，以便在 HTML 中通过 onclick 调用
+    async function loadProducts() {
+        try {
+            const res = await fetch("/products?limit=100");
+            const data = await res.json();
+            if (!data.success) {
+                console.error("加载作品失败", data);
+                return;
+            }
+            renderProducts(data.products);
+        } catch (err) {
+            console.error("请求 /products 失败:", err);
+        }
+    }
+
+    function renderProducts(products) {
+        const container = document.getElementById("productList");
+        if (!container) return;
+
+        if (!products || products.length === 0) {
+            container.innerHTML = `
+                <div class="empty-products">
+                    <i class="fas fa-box-open"></i>
+                    暂无作品，请上传。
+                </div>
+            `;
+            return;
+        }
+
+        // 构建表格
+        let html = `
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>作品</th>
+                        <th>现金价格</th>
+                        <th>积分价格</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        products.forEach(product => {
+            const id = product._id;
+            const title = product.title || "未命名";
+            const price = product.price || 0;
+            const pointsPrice = product.pointsPrice !== undefined && product.pointsPrice !== null ? product.pointsPrice : "";
+
+            html += `
+                <tr>
+                    <td class="product-title">${escapeHtml(title)}</td>
+                    <td class="product-price">￥${Number(price).toFixed(2)}</td>
+                    <td>
+                        <input type="number" step="1" min="0" class="points-input"
+                               id="points_${id}" value="${pointsPrice}" placeholder="积分">
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <button class="btn-sm btn-outline-sm" onclick="autoPoints('${id}')">
+                                <i class="fas fa-calculator"></i> 自动计算
+                            </button>
+                            <button class="btn-sm btn-primary-sm" onclick="savePoints('${id}')">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+    // 简单的转义防止 XSS
+    function escapeHtml(text) {
+        if (!text) return "";
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // 自动计算：价格 × 100
+    function autoPoints(productId) {
+        // 需要通过 productId 找到对应的价格，我们只能从表格中读取现金价格
+        // 方法：找到包含该 productId 的行，然后从该行的第二个 td（现金价格）中提取数字
+        const row = document.querySelector(`#points_${productId}`)?.closest('tr');
+        if (!row) {
+            alert('找不到对应行');
+            return;
+        }
+        const priceCell = row.querySelector('.product-price');
+        if (!priceCell) {
+            alert('找不到价格列');
+            return;
+        }
+        // 提取数字，例如 "￥25.00" → 25
+        const priceText = priceCell.textContent.trim();
+        const match = priceText.match(/[\d.]+/);
+        if (!match) {
+            alert('无法解析价格');
+            return;
+        }
+        const price = parseFloat(match[0]);
+        if (isNaN(price) || price < 0) {
+            alert('价格无效');
+            return;
+        }
+        const input = document.getElementById(`points_${productId}`);
+        if (input) {
+            input.value = Math.round(price * 100);
+        }
+    }
+
+    // 保存积分价格
+    async function savePoints(productId) {
+        const input = document.getElementById(`points_${productId}`);
+        if (!input) {
+            alert('输入框不存在');
+            return;
+        }
+        const pointsPrice = input.value.trim();
+        // 允许空值（表示取消积分兑换）
+        const body = {
+            pointsPrice: pointsPrice === "" ? null : Number(pointsPrice)
+        };
+        if (body.pointsPrice !== null && (isNaN(body.pointsPrice) || body.pointsPrice < 0)) {
+            alert('请输入有效的积分数量（非负整数）');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/product/${productId}/points`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ 积分价格保存成功');
+                // 可选：重新加载列表以刷新显示
+                // loadProducts();
+            } else {
+                alert(data.error || '保存失败');
+            }
+        } catch (err) {
+            console.error('保存积分出错:', err);
+            alert('请求失败，请检查网络');
+        }
+    }
+
+    // 页面加载完成后自动加载作品列表
+    window.addEventListener('load', function() {
+        loadProducts();
+    });
+</script>
+
+</body>
+</html>

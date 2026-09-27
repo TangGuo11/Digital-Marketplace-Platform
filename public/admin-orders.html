@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>订单管理系统</title>
+  <!-- 引入 axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- 引入 Google Fonts 提升字体质感 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 免费图标库 (美化图标) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f0f4fc 0%, #e9eefa 100%);
+      font-family: 'Inter', sans-serif;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    /* 优雅容器 */
+    .dashboard-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* 页眉区域 */
+    .page-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-section h2 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1E2A5E, #2C3E66);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .badge-count {
+      background: #2c3e66;
+      color: white;
+      border-radius: 40px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .refresh-btn {
+      background: white;
+      border: 1px solid #d0dae8;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #2c3e66;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(2px);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .refresh-btn:hover {
+      background: #f8fafd;
+      border-color: #8ba0bc;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 卡片网格布局 */
+    .order-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+      margin-top: 8px;
+    }
+
+    /* 卡片设计 - 毛玻璃质感 + 优雅阴影 */
+    .order-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(0px);
+      border-radius: 28px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+      transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+      border: 1px solid rgba(255,255,255,0.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .order-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 45px -18px rgba(0, 0, 0, 0.2);
+      border-color: rgba(72, 187, 120, 0.3);
+    }
+
+    /* 卡片头部装饰条 */
+    .card-accent {
+      height: 6px;
+      background: linear-gradient(90deg, #2ecc71, #27ae60, #2ecc71);
+      width: 100%;
+    }
+
+    .card-content {
+      padding: 20px 22px 24px;
+    }
+
+    /* 订单号区域 + 状态标志 */
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .order-id {
+      font-weight: 800;
+      font-size: 1rem;
+      background: #f1f5f9;
+      padding: 5px 12px;
+      border-radius: 40px;
+      color: #1e293b;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .order-id i {
+      color: #2ecc71;
+      font-size: 0.9rem;
+    }
+
+    .badge-pending {
+      background: #fef9e3;
+      color: #b85c00;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 50px;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #ffdfb3;
+    }
+
+    /* 商品信息高亮 */
+    .product-row {
+      background: #fafcff;
+      border-radius: 20px;
+      padding: 12px 14px;
+      margin: 16px 0;
+      border: 1px solid #edf2f7;
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: #0f172a;
+      background: #ffffff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      word-break: break-word;
+      text-align: right;
+    }
+
+    .price-highlight {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #1e4620;
+      background: #e9f7e5;
+      padding: 4px 12px;
+      border-radius: 40px;
+      display: inline-block;
+    }
+
+    /* 分割细线 */
+    .divider-light {
+      height: 1px;
+      background: radial-gradient(circle, #cbd5e1 30%, transparent);
+      margin: 16px 0;
+    }
+
+    /* 联系信息 与 服务器凭证 */
+    .credentials {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-left: 4px solid #2ecc71;
+    }
+
+    .cred-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .cred-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .cred-label {
+      font-weight: 700;
+      min-width: 85px;
+      color: #334155;
+    }
+
+    .cred-value {
+      font-family: 'Inter', monospace;
+      background: #ffffff;
+      padding: 4px 10px;
+      border-radius: 24px;
+      color: #0f172a;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    /* 按钮样式升级 */
+    .btn-complete {
+      width: 100%;
+      background: linear-gradient(105deg, #2ecc71, #27ae60);
+      border: none;
+      color: white;
+      padding: 12px 0;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.2);
+      margin-top: 12px;
+    }
+
+    .btn-complete:hover {
+      background: linear-gradient(105deg, #27ae60, #229954);
+      transform: scale(0.98);
+      box-shadow: 0 6px 14px rgba(46, 204, 113, 0.3);
+    }
+
+    /* 空状态设计 */
+    .empty-state {
+      background: white;
+      border-radius: 48px;
+      text-align: center;
+      padding: 70px 30px;
+      margin-top: 40px;
+      box-shadow: 0 15px 30px -12px rgba(0,0,0,0.05);
+      border: 1px solid rgba(46,204,113,0.2);
+    }
+
+    .empty-state i {
+      font-size: 5rem;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      color: #64748b;
+    }
+
+    /* 加载动画 */
+    .loading-skeleton {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 60px;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid #2ecc71;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 响应式 */
+    @media (max-width: 640px) {
+      body {
+        padding: 20px 16px;
+      }
+      .order-grid {
+        grid-template-columns: 1fr;
+      }
+      .title-section h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* 淡入动画 */
+    .fade-in {
+      animation: fadeInUp 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <div class="page-header">
+    <div class="title-section">
+      <i class="fas fa-clipboard-list" style="font-size: 2rem; color: #2ecc71; background: #e6f7ed; padding: 8px; border-radius: 20px;"></i>
+      <h2>待处理订单</h2>
+      <span class="badge-count" id="orderCountBadge">0</span>
+    </div>
+    <button class="refresh-btn" id="manualRefreshBtn">
+      <i class="fas fa-sync-alt"></i> 刷新订单
+    </button>
+  </div>
+
+  <div id="orderListContainer">
+    <!-- 动态渲染区域，初始加载动画 -->
+    <div class="loading-skeleton">
+      <div class="spinner"></div>
+      <p style="color:#5a6e8a;">加载订单中，请稍候...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 优雅加载订单并渲染网格
+  async function loadOrders() {
+    const container = document.getElementById("orderListContainer");
+    // 显示加载骨架
+    container.innerHTML = `
+      <div class="loading-skeleton">
+        <div class="spinner"></div>
+        <p style="color:#5a6e8a;">正在同步订单数据...</p>
+      </div>
+    `;
+
+    try {
+      const res = await axios.get("/api/pay/admin/orders");
+      // 模拟网络延迟效果，让加载更自然 (无实际延迟，仅展示)
+      if (!res.data || !res.data.success) {
+        throw new Error(res.data?.message || "加载失败，接口响应异常");
+      }
+
+      const orders = res.data.data;
+      const orderCount = orders?.length || 0;
+      // 更新头部徽章
+      const countBadge = document.getElementById("orderCountBadge");
+      if (countBadge) countBadge.innerText = orderCount;
+
+      if (!orders || orders.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state fade-in">
+            <i class="fas fa-check-circle"></i>
+            <h3>暂无待处理订单</h3>
+            <p>所有订单已处理完毕，保持整洁 🎉</p>
+            <button class="refresh-btn" style="margin-top: 24px; background:#f0f4fc;" id="emptyRefreshBtn">
+              <i class="fas fa-redo-alt"></i> 刷新
+            </button>
+          </div>
+        `;
+        const emptyBtn = document.getElementById("emptyRefreshBtn");
+        if (emptyBtn) emptyBtn.addEventListener("click", () => loadOrders());
+        return;
+      }
+
+      // 构建卡片网格
+      const gridWrapper = document.createElement("div");
+      gridWrapper.className = "order-grid";
+
+      orders.forEach((o, idx) => {
+        const card = document.createElement("div");
+        card.className = "order-card fade-in";
+        card.style.animationDelay = `${Math.min(idx * 0.03, 0.3)}s`;
+
+        // 安全取值，防止字段缺失导致页面报错
+        const payId = o.payId || '未知订单号';
+        const productName = o.productName || '未命名商品';
+        const reallyPrice = o.reallyPrice !== undefined && o.reallyPrice !== null ? o.reallyPrice : '0.00';
+        const contactType = o.contactType || '未提供';
+        const contactValue = o.contactValue || '—';
+        const serverAccount = o.serverAccount || '—';
+        const serverPassword = o.serverPassword || '—';
+
+        card.innerHTML = `
+          <div class="card-accent"></div>
+          <div class="card-content">
+            <div class="order-header">
+              <span class="order-id">
+                <i class="fas fa-receipt"></i> ${escapeHtml(payId)}
+              </span>
+              <span class="badge-pending">
+                <i class="fas fa-hourglass-half"></i> 待处理
+              </span>
+            </div>
+            
+            <div class="product-row">
+              <div class="info-line">
+                <span class="info-label"><i class="fas fa-tag"></i> 商品名称</span>
+                <span class="info-value">${escapeHtml(productName)}</span>
+              </div>
+              <div class="info-line">
+                <span class="info-label"><i class="fas fa-coins"></i> 订单金额</span>
+                <span class="price-highlight">${escapeHtml(reallyPrice)} 元</span>
+              </div>
+            </div>
+
+            <div class="credentials">
+              <div class="cred-item">
+                <span class="cred-label"><i class="fas fa-address-card"></i> 联系方式</span>
+                <span class="cred-value">${escapeHtml(contactType)} : ${escapeHtml(contactValue)}</span>
+              </div>
+              <div class="cred-item">
+                <span class="cred-label"><i class="fas fa-server"></i> 服务器账号</span>
+                <span class="cred-value">${escapeHtml(serverAccount)}</span>
+              </div>
+              <div class="cred-item">
+                <span class="cred-label"><i class="fas fa-lock"></i> 服务器密码</span>
+                <span class="cred-value">${escapeHtml(serverPassword)}</span>
+              </div>
+            </div>
+            
+            <button class="btn-complete" data-payid="${escapeAttr(payId)}">
+              <i class="fas fa-check-circle"></i> 完成订单
+            </button>
+          </div>
+        `;
+
+        // 绑定按钮事件 (使用事件委托或者直接绑定，此处直接挂载)
+        const completeBtn = card.querySelector('.btn-complete');
+        if (completeBtn) {
+          completeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = completeBtn.getAttribute('data-payid');
+            finishOrder(id);
+          });
+        }
+        gridWrapper.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(gridWrapper);
+
+    } catch (error) {
+      console.error("订单加载异常:", error);
+      let errorMsg = "加载失败，请稍后重试";
+      if (error.response) {
+        errorMsg = error.response.data?.message || "网络接口错误";
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      container.innerHTML = `
+        <div class="empty-state fade-in" style="border-left: 5px solid #e74c3c;">
+          <i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i>
+          <h3>加载失败 😢</h3>
+          <p>${escapeHtml(errorMsg)}</p>
+          <button class="refresh-btn" style="margin-top: 20px; background:#fff0f0;" id="errorRetryBtn">
+            <i class="fas fa-rotate-right"></i> 点击重试
+          </button>
+        </div>
+      `;
+      const retryBtn = document.getElementById("errorRetryBtn");
+      if (retryBtn) retryBtn.addEventListener("click", () => loadOrders());
+    }
+  }
+
+  // 完成订单逻辑（优化体验，防抖）
+  let isFinishing = false;
+  async function finishOrder(payId) {
+    if (!payId) {
+      alert("订单号无效，无法完成");
+      return;
+    }
+    if (isFinishing) {
+      alert("请稍后，订单处理中...");
+      return;
+    }
+
+    const confirmed = confirm(`✅ 确认已完成订单【${payId}】的处理吗？\n完成后订单将从未处理列表中移除。`);
+    if (!confirmed) return;
+
+    isFinishing = true;
+    try {
+      const res = await axios.post("/api/pay/finish", { payId });
+      if (res.data && res.data.success) {
+        // 成功提示：现代风格简短提示
+        showToastMessage("订单已完成", "success");
+        // 重新加载订单列表，刷新视图
+        await loadOrders();
+      } else {
+        const errMsg = res.data?.message || "操作失败，请检查订单状态";
+        showToastMessage(errMsg, "error");
+      }
+    } catch (error) {
+      console.error("完成订单错误:", error);
+      let backendMsg = "网络错误，无法完成订单";
+      if (error.response && error.response.data && error.response.data.message) {
+        backendMsg = error.response.data.message;
+      } else if (error.message) {
+        backendMsg = error.message;
+      }
+      showToastMessage(backendMsg, "error");
+    } finally {
+      isFinishing = false;
+    }
+  }
+
+  // 优雅轻提示 (toast) 提升交互体验
+  function showToastMessage(msg, type = "info") {
+    // 移除已有的toast
+    const existingToast = document.querySelector(".global-toast");
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "global-toast";
+    let bgColor = "#2c3e66";
+    let icon = "fa-info-circle";
+    if (type === "success") {
+      bgColor = "#27ae60";
+      icon = "fa-check-circle";
+    } else if (type === "error") {
+      bgColor = "#e74c3c";
+      icon = "fa-exclamation-circle";
+    }
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: ${bgColor};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 60px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+      backdrop-filter: blur(4px);
+      font-family: 'Inter', sans-serif;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.25s ease;
+      pointer-events: none;
+      max-width: 90vw;
+      white-space: nowrap;
+    `;
+    if (window.innerWidth < 500) {
+      toast.style.whiteSpace = "normal";
+      toast.style.textAlign = "center";
+      toast.style.padding = "10px 20px";
+      toast.style.fontSize = "0.8rem";
+    }
+    toast.innerHTML = `<i class="fas ${icon}" style="font-size:1rem;"></i> ${escapeHtml(msg)}`;
+    document.body.appendChild(toast);
+    // 动画
+    setTimeout(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateX(-50%) translateY(0)";
+    }, 10);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(-50%) translateY(20px)";
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 250);
+    }, 2800);
+  }
+
+  // 简单的防XSS辅助函数
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+      return c;
+    });
+  }
+
+  function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // 手动刷新按钮
+  document.addEventListener("DOMContentLoaded", () => {
+    const refreshBtn = document.getElementById("manualRefreshBtn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        loadOrders();
+      });
+    }
+    // 初次加载
+    loadOrders();
+  });
+</script>
+</body>
+</html>

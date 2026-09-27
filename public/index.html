@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>武韵|指令</title>
+    
+    <!-- 预连接优化 -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <!-- 延迟加载 Font Awesome，不阻塞渲染 -->
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ----- 假固定背景层：性能最佳，滚动丝滑 ----- */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a2e;  /* 降级背景色 */
+            background-size: cover;
+            background-position: center center;
+            z-index: -2;
+            pointer-events: none;
+        }
+        /* 背景加载完成后应用图片 */
+        .bg-layer.bg-loaded {
+            background-image: url('/scb/wallpaper_legends_Modular_A/wallpaper_minecraft_Modular_A_1080x1920.webp');
+        }
+
+        /* 背景遮罩层 - 独立出来，性能更好 */
+        .overlay-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Minecraft', 'Poppins', system-ui, -apple-system, 'Microsoft YaHei', sans-serif;
+            color: #eee;
+            scroll-behavior: smooth;
+            position: relative;
+            background: transparent;  /* 移除 body 背景 */
+        }
+
+        /* ----- 横幅区域 ----- */
+        .hero-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #2c3e2f;  /* 降级背景色 */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center 30%;
+            overflow: hidden;
+            box-shadow: 0 4px 20px -3px rgba(0,0,0,0.5);
+            border-radius: 0;
+            height: 140px;
+            z-index: 1000;
+        }
+        .hero-banner.bg-loaded {
+            background-image: url('/scb/image_d3fcb5c2.png');
+        }
+        @media (max-width: 768px) {
+            .hero-banner { height: 110px; background-position: center 25%; }
+        }
+        @media (max-width: 480px) {
+            .hero-banner { height: 90px; background-position: center 20%; }
+        }
+        
+        .hero-overlay {
+            background: linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 100%);
+            padding: 0.6rem 2rem;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .hero-title {
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #7cb518;
+            text-shadow: 
+                3px 3px 0 #3a5e0e,
+                5px 5px 0 #1e3a03,
+                6px 6px 10px rgba(0,0,0,0.5);
+            display: inline-block;
+            font-family: 'Minecraft', 'Segoe UI', 'Poppins', monospace;
+            background: linear-gradient(135deg, #a3e635, #5a9e0e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: #7cb518;
+        }
+        .hero-sub {
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.65);
+            display: inline-block;
+            padding: 0.2rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #f0f0d0;
+            letter-spacing: 1px;
+            margin-top: 0.2rem;
+            border-left: 2px solid #7cb518;
+            border-right: 2px solid #7cb518;
+        }
+        @media (max-width: 768px) {
+            .hero-overlay { padding: 0.4rem 1rem; }
+            .hero-title { font-size: 1.8rem; letter-spacing: 2px; text-shadow: 2px 2px 0 #3a5e0e, 3px 3px 6px black; }
+            .hero-sub { font-size: 0.7rem; padding: 0.15rem 0.9rem; }
+        }
+
+        .main-content {
+            padding-top: 140px;
+        }
+        @media (max-width: 768px) { .main-content { padding-top: 110px; } }
+        @media (max-width: 480px) { .main-content { padding-top: 90px; } }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 1.8rem 3rem;
+        }
+
+        .region-block {
+            margin-bottom: 4rem;
+        }
+        .region-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .region-header .line {
+            flex: 1;
+            height: 3px;
+            border-radius: 4px;
+        }
+        .region-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            padding: 0 15px;
+            font-family: 'Minecraft', monospace;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        /* 标题样式完全保留，移除图标相关样式 */
+        .shop-title { color: #e6d58f; background: linear-gradient(135deg, #f5e7a3, #cbbf6e, #9b8c4c); background-clip: text; -webkit-background-clip: text; color: #e6d58f; text-shadow: 0 0 20px rgba(230, 213, 143, 0.8), 0 0 8px rgba(155, 140, 76, 0.5); }
+        .custom-title { color: #ffcc66; background: linear-gradient(135deg, #ffdd99, #ffb347, #f5a623); background-clip: text; -webkit-background-clip: text; color: #ffcc66; text-shadow: 0 0 20px rgba(255, 204, 102, 0.9), 0 0 8px rgba(245, 166, 35, 0.6); }
+        .guest-title { color: #ff8c5a; background: linear-gradient(135deg, #ffaa7a, #e66a3a, #b85c3a); background-clip: text; -webkit-background-clip: text; color: #ff8c5a; text-shadow: 0 0 20px rgba(255, 140, 90, 0.9), 0 0 8px rgba(184, 92, 58, 0.6); }
+        .points-title { color: #ffd966; background: linear-gradient(135deg, #ffe599, #ffd966, #c9a020); background-clip: text; -webkit-background-clip: text; color: #ffd966; text-shadow: 0 0 20px rgba(255, 217, 102, 0.9), 0 0 8px rgba(201, 160, 32, 0.6); }
+        .user-title { color: #a3e635; background: linear-gradient(135deg, #d4fc79, #a3e635, #7cb518); background-clip: text; -webkit-background-clip: text; color: #a3e635; text-shadow: 0 0 20px rgba(163, 230, 53, 0.9), 0 0 8px rgba(124, 181, 24, 0.6); }
+
+        /* 卡片样式 - 移除 transition all，优化性能 */
+        .region-card {
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,215,0,0.5);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            min-height: 450px;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        /* 卡片背景图片由 JS 动态加载 */
+        .shop-card-bg { position: relative; }
+        .custom-card-bg { position: relative; }
+        .guest-card-bg { position: relative; }
+        
+        .shop-card-bg::before, .custom-card-bg::before, .guest-card-bg::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 0;
+        }
+        
+        .card-inner {
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card-content-top {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .card-button-bottom {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-desc {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 2;
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+            background: rgba(0, 0, 0, 0.55);
+            padding: 1rem 2rem;
+            border-radius: 60px;
+            line-height: 1.5;
+            color: #fffef7;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* 按钮样式保持不变 */
+        .shop-btn {
+            background: linear-gradient(95deg, #8f9a5e, #6b7a42);
+            border: none;
+            padding: 1.2rem 3rem;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #f9f2d9;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 0 #4a5a2a;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+        .shop-btn i { font-size: 1.4rem; }
+        .shop-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #4a5a2a; background: linear-gradient(95deg, #a5b072, #7e9050); }
+        .shop-btn:active { transform: translateY(5px); box-shadow: 0 4px 0 #4a5a2a; }
+
+        .custom-btn {
+            background: linear-gradient(95deg, #f0a34b, #d47c2a);
+            border: none;
+            padding: 1.2rem 3rem;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2c1a0c;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 0 #6b3c12;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+        .custom-btn i { font-size: 1.4rem; }
+        .custom-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #6b3c12; background: linear-gradient(95deg, #ffb35c, #e68a2e); }
+        .custom-btn:active { transform: translateY(5px); box-shadow: 0 4px 0 #6b3c12; }
+
+        .guest-btn {
+            background: linear-gradient(95deg, #aa5a3a, #8a3a1a);
+            border: none;
+            padding: 1.2rem 3rem;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ffefcf;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 0 #5a2a0a;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+        .guest-btn i { font-size: 1.4rem; }
+        .guest-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #5a2a0a; background: linear-gradient(95deg, #c46a42, #9e4a22); }
+        .guest-btn:active { transform: translateY(5px); box-shadow: 0 4px 0 #5a2a0a; }
+
+        .points-btn {
+            background: linear-gradient(95deg, #d4a820, #a07810);
+            border: none; padding: 1.2rem 3rem; font-size: 1.4rem; font-weight: bold;
+            color: #fff8e0; border-radius: 60px; cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 0 #6b5010; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 12px;
+        }
+        .points-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #6b5010; }
+        .user-btn {
+            background: linear-gradient(95deg, #8bc34a, #689f38);
+            border: none; padding: 1.2rem 3rem; font-size: 1.4rem; font-weight: bold;
+            color: #fff; border-radius: 60px; cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 0 #33691e; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 12px;
+        }
+        .user-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #33691e; }
+
+        @media (max-width: 768px) {
+            .content-container { padding: 1rem 1rem 2rem; }
+            .region-title { font-size: 2rem; white-space: normal; text-align: center; }
+            .region-header .line { flex: 0.3; }
+            .card-inner { padding: 2rem 1.5rem 1.5rem; min-height: 380px; }
+            .region-card { min-height: 380px; }
+            .card-desc { font-size: 1.1rem; padding: 0.7rem 1.2rem; }
+            .shop-btn, .custom-btn, .guest-btn { padding: 0.9rem 2rem; font-size: 1.1rem; }
+            .shop-btn i, .custom-btn i, .guest-btn i { font-size: 1.1rem; }
+        }
+        @media (max-width: 480px) {
+            .card-desc { font-size: 1rem; padding: 0.6rem 1rem; }
+            .shop-btn, .custom-btn, .guest-btn { padding: 0.7rem 1.5rem; font-size: 1rem; }
+        }
+
+        .modal-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #2c2e2fdd;
+            backdrop-filter: blur(12px);
+            color: #ffd966;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 1rem;
+            border-left: 6px solid #7cb518;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            box-shadow: 0 5px 20px black;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        @media (max-width: 550px) {
+            .modal-message { white-space: normal; width: 80%; text-align: center; font-size: 0.85rem; }
+        }
+        .modal-message.show { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        button:focus-visible { outline: 3px solid #7cb518; }
+    </style>
+</head>
+<body>
+
+<!-- 假固定背景层 - 性能最佳 -->
+<div class="bg-layer" id="bgLayer"></div>
+<!-- 遮罩层独立 -->
+<div class="overlay-layer"></div>
+
+<div class="hero-banner" id="heroBanner">
+    <div class="hero-overlay">
+        <h1 class="hero-title">武韵|指令</h1>
+        <div class="hero-sub">「 方块世界 · 指令之巅 · 匠心独运 」</div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="content-container">
+        
+        <div class="region-block">
+            <div class="region-header">
+                <div class="line" style="background: linear-gradient(90deg, transparent, #e6d58f, #e6d58f, transparent);"></div>
+                <div class="region-title shop-title">作品商店</div>
+                <div class="line" style="background: linear-gradient(90deg, transparent, #e6d58f, #e6d58f, transparent);"></div>
+            </div>
+            <div class="region-card shop-card-bg" id="shopCard">
+                <div class="card-inner">
+                    <div class="card-content-top">
+                        <div class="card-desc">指令功能精选、限时特惠、精选模块任你挑选</div>
+                    </div>
+                    <div class="card-button-bottom">
+                        <button class="shop-btn" id="enterShopBtn">
+                            <i class="fas fa-arrow-right-to-bracket"></i> 进入作品商店
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="region-block">
+            <div class="region-header">
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ffcc66, #ffcc66, transparent);"></div>
+                <div class="region-title custom-title">定制作品</div>
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ffcc66, #ffcc66, transparent);"></div>
+            </div>
+            <div class="region-card custom-card-bg" id="customCard">
+                <div class="card-inner">
+                    <div class="card-content-top">
+                        <div class="card-desc">专属你的指令神作、定制功能、玩法开发 · 一对一匠心定制</div>
+                    </div>
+                    <div class="card-button-bottom">
+                        <button class="custom-btn" id="customOrderBtn">
+                            <i class="fas fa-pen-ruler"></i> 立即定制作品
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="region-block">
+            <div class="region-header">
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ff8c5a, #ff8c5a, transparent);"></div>
+                <div class="region-title guest-title">玩家投稿留言板</div>
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ff8c5a, #ff8c5a, transparent);"></div>
+            </div>
+            <div class="region-card guest-card-bg" id="guestCard">
+                <div class="card-inner">
+                    <div class="card-content-top">
+                        <div class="card-desc">留下你的足迹，交流指令心得，反馈建议与创意</div>
+                    </div>
+                    <div class="card-button-bottom">
+                        <button class="guest-btn" id="guestbookBtn">
+                            <i class="fas fa-message"></i> 进入留言板
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="region-block">
+            <div class="region-header">
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ffd966, #ffd966, transparent);"></div>
+                <div class="region-title points-title">赚积分换作品</div>
+                <div class="line" style="background: linear-gradient(90deg, transparent, #ffd966, #ffd966, transparent);"></div>
+            </div>
+            <div class="region-card guest-card-bg" id="pointsCard">
+                <div class="card-inner">
+                    <div class="card-content-top">
+                        <div class="card-desc">完成广告任务领取积分，免费兑换商店精选指令作品</div>
+                    </div>
+                    <div class="card-button-bottom">
+                        <button class="points-btn" id="pointsEarnBtn">
+                            <i class="fas fa-coins"></i> 去赚积分
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toastMsg" class="modal-message">✨ 提示 ✨</div>
+
+<script>
+    (function() {
+        const toast = document.getElementById('toastMsg');
+        
+        function showMessage(text, isError = false) {
+            if (!toast) return;
+            toast.textContent = text;
+            toast.style.borderLeftColor = isError ? '#e67e22' : '#7cb518';
+            toast.style.backgroundColor = isError ? '#2c1a0cee' : '#1e2a2edd';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+        
+        // 事件委托 - 减少事件监听器数量
+        document.querySelector('.content-container').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            
+            const actions = {
+                enterShopBtn: { url: '/minecraft-shop.html', msg: '🚀 正在跳转至作品商店...' },
+                customOrderBtn: { url: '/custom-hall.html', msg: '🛠️ 正在跳转至定制作品页面...' },
+                guestbookBtn: { url: '/guestbook.html', msg: '💬 正在跳转至玩家留言板...' },
+                pointsEarnBtn: { url: '/points-earn.html', msg: '🪙 正在跳转至赚积分页面...' }
+            };
+            
+            const action = actions[btn.id];
+            if (action) {
+                showMessage(action.msg);
+                setTimeout(() => window.open(action.url, '_blank'), 50);
+            }
+        });
+        
+        // 图片懒加载 - 使用 requestIdleCallback 延迟加载非首屏背景图
+        const loadBackgrounds = () => {
+            // 首屏立即加载（背景层和 banner）
+            const bgLayer = document.getElementById('bgLayer');
+            if (bgLayer) bgLayer.classList.add('bg-loaded');
+            document.getElementById('heroBanner')?.classList.add('bg-loaded');
+            
+            // 卡片背景图延迟加载，提升首屏速度
+            setTimeout(() => {
+                const shopCard = document.getElementById('shopCard');
+                const customCard = document.getElementById('customCard');
+                const guestCard = document.getElementById('guestCard');
+                const pointsCard = document.getElementById('pointsCard');
+                
+                if (shopCard) shopCard.style.backgroundImage = "url('/scb/wallpapers_dungeons_jungle_awakens/wallpaper_dungeons_jungle_awakens_2058x1440.webp')";
+                if (customCard) customCard.style.backgroundImage = "url('/scb/wallpapers_bundles_of_bravery/MCV_FallDrop_NetDownloadableWallpaper_2560x1440.webp')";
+                if (guestCard) guestCard.style.backgroundImage = "url('/scb/wallpaper_dungeons/wallpaper_dungeons_2560x1440.webp')";
+                if (pointsCard) pointsCard.style.backgroundImage = "url('/scb/wallpapers_the_copper_age_drop-1/Minecraft_Fall_Drop_Campaign_Key_Art_DotNet_Downloadable_Wallpaper_1920x1080.png')";
+                
+                // 添加背景尺寸样式
+                if (shopCard) shopCard.style.backgroundSize = 'cover';
+                if (customCard) customCard.style.backgroundSize = 'cover';
+                if (guestCard) guestCard.style.backgroundSize = 'cover';
+                if (pointsCard) pointsCard.style.backgroundSize = 'cover';
+                if (shopCard) shopCard.style.backgroundPosition = 'center';
+                if (customCard) customCard.style.backgroundPosition = 'center';
+                if (guestCard) guestCard.style.backgroundPosition = 'center';
+                if (pointsCard) pointsCard.style.backgroundPosition = 'center';
+            }, 100);
+        };
+        
+        // 使用 requestIdleCallback 或 setTimeout 延迟非关键任务
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => loadBackgrounds(), { timeout: 2000 });
+        } else {
+            setTimeout(loadBackgrounds, 100);
+        }
+        
+        // 预加载跳转页面，提升后续点击体验
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                const links = ['/minecraft-shop.html', '/custom.html', '/guestbook.html'];
+                links.forEach(link => {
+                    const prefetch = document.createElement('link');
+                    prefetch.rel = 'prefetch';
+                    prefetch.href = link;
+                    document.head.appendChild(prefetch);
+                });
+            });
+        }
+    })();
+</script>
+<script src="/js/auth.js"></script>
+<script>Auth.mountUserBar();</script>
+</body>
+</html>

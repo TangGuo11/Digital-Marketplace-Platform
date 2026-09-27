@@ -1,0 +1,32 @@
+✅ 功能说明
+
+/products → 获取全部作品（可分页）
+
+/product/:id → 获取单个作品详情
+
+/product/create → 创建作品
+
+/product/upload → 上传媒体
+
+/uploads → 静态访问媒体文件
+
+/ → 静态访问前端 MediaUploader.html
+
+新增 API
+路由	说明
+POST /api/auth/register
+注册
+POST /api/auth/login
+登录
+GET /api/auth/me
+当前用户
+GET /api/points/balance
+积分余额
+GET /api/points/history
+积分记录
+POST /api/points/redeem
+积分兑换商品
+POST /api/points/ad/complete
+演示完成任务
+GET /api/custom/my
+我的委托

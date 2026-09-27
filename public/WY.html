@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>琉璃之境 | 管理员总控导航</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #e9f0fc 0%, #f1f5fe 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 装饰性抽象光晕 */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, rgba(120, 160, 245, 0.15) 0%, rgba(200, 220, 255, 0) 70%);
+            top: -20vw;
+            right: -30vw;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            width: 70vw;
+            height: 70vw;
+            background: radial-gradient(circle, rgba(210, 180, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+            bottom: -30vw;
+            left: -20vw;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 主容器 */
+        .dashboard {
+            max-width: 1380px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 顶部欢迎区域 */
+        .hero-section {
+            margin-bottom: 3rem;
+            text-align: center;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+
+        .greeting-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c3e66;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .greeting-badge i {
+            font-size: 1rem;
+            color: #4f7df3;
+        }
+
+        .hero-section h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1f2b48, #2a3f6e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-section .sub {
+            font-size: 1.1rem;
+            color: #5b6e8c;
+            font-weight: 400;
+            border-top: 1px solid rgba(79, 125, 243, 0.2);
+            display: inline-block;
+            padding-top: 0.6rem;
+        }
+
+        /* 三张精美卡片网格 */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0 3rem;
+        }
+
+        /* 卡片通用样式 */
+        .admin-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 1.8rem 1.8rem 2.2rem 1.8rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .admin-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #7c9cf0, #b3c6ff);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 28px 40px -16px rgba(26, 48, 91, 0.2);
+            border-color: rgba(124, 156, 240, 0.3);
+        }
+
+        .admin-card:hover::before {
+            opacity: 1;
+        }
+
+        /* 卡片图标区域 */
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(125deg, #eff3fe, #ffffff);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.6rem;
+            box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .admin-card:hover .card-icon {
+            transform: scale(1.02);
+        }
+
+        .card-icon i {
+            font-size: 2.2rem;
+            color: #3b5fcf;
+        }
+
+        /* 卡片文字 */
+        .card-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: #1e2a47;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: #5d6f8f;
+            line-height: 1.45;
+            margin-bottom: 1.8rem;
+            flex-grow: 1;
+        }
+
+        /* 链接元信息 */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 1.2rem;
+            margin-top: 0.2rem;
+            font-size: 0.85rem;
+            color: #6d7e9e;
+        }
+
+        .endpoint-badge {
+            font-family: monospace;
+            background: #f0f3fc;
+            padding: 0.25rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2d4a9e;
+            word-break: break-all;
+        }
+
+        .enter-link {
+            color: #3b5fcf;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+        }
+
+        .admin-card:hover .enter-link {
+            gap: 10px;
+            color: #1f3a8a;
+        }
+
+        /* 底部系统状态栏 */
+        .footer-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 1.2rem 1.5rem;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            color: #43607c;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-item i {
+            font-size: 1.1rem;
+            color: #5780e0;
+        }
+
+        .live-clock {
+            font-family: monospace;
+            font-weight: 500;
+            background: #ffffffb3;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+        }
+
+        /* 动画 */
+        @keyframes fadeSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-appear {
+            animation: fadeSlideUp 0.6s ease backwards;
+        }
+
+        .card-appear:nth-child(1) { animation-delay: 0.05s; }
+        .card-appear:nth-child(2) { animation-delay: 0.15s; }
+        .card-appear:nth-child(3) { animation-delay: 0.25s; }
+
+        /* 响应式细节 */
+        @media (max-width: 780px) {
+            body {
+                padding: 1.2rem;
+            }
+            .hero-section h1 {
+                font-size: 2.2rem;
+            }
+            .card-title {
+                font-size: 1.5rem;
+            }
+            .footer-stats {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+
+        /* 点缀小星星（动态小点缀） */
+        .floating-dot {
+            position: absolute;
+            background: rgba(110, 145, 235, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="hero-section">
+        <div class="greeting-badge">
+            <i class="fas fa-crown"></i>
+            <span>管理员中枢 · 臻享控制台</span>
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h1>流光·总览导航</h1>
+        <div class="sub">统筹全局，游刃于秩序与美学之间</div>
+    </div>
+
+    <div class="nav-grid">
+        <!-- 卡片 1: 商店订单管理 -->
+        <div class="admin-card card-appear" data-url="/admin-orders.html">
+            <div class="card-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="card-title">商店订单管理</div>
+            <div class="card-desc">
+                审阅、处理与追踪所有商店产生的交易订单。从待付款至已完成，清晰梳理每一笔商业脉络，让商品流通井然有序。
+            </div>
+            <div class="card-meta">
+                <span class="endpoint-badge"><i class="far fa-copy"></i> admin-orders</span>
+                <span class="enter-link">进入模块 <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- 卡片 2: 商店上传作品管理 (MediaUploader) -->
+        <div class="admin-card card-appear" data-url="/MediaUploader.html">
+            <div class="card-icon">
+                <i class="fas fa-images"></i>
+            </div>
+            <div class="card-title">作品典藏库</div>
+            <div class="card-desc">
+                云端作品集控管 | 上传、编目、审核创意作品。以画廊级体验管理每一份数字艺术品，保持商店美学高度。
+            </div>
+            <div class="card-meta">
+                <span class="endpoint-badge"><i class="fas fa-upload"></i> MediaUploader</span>
+                <span class="enter-link">进入模块 <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- 卡片 3: 委托订单管理 (custom-admin) -->
+        <div class="admin-card card-appear" data-url="/custom-admin.html">
+            <div class="card-icon">
+                <i class="fas fa-pen-fancy"></i>
+            </div>
+            <div class="card-title">委托订单管理</div>
+            <div class="card-desc">
+                专项委托定制中枢，跟踪每一个创意项目的进程，协调需求与交付，打造一对一精致服务生态。
+            </div>
+            <div class="card-meta">
+                <span class="endpoint-badge"><i class="fas fa-tasks"></i> custom-admin</span>
+                <span class="enter-link">进入模块 <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-stats">
+        <div class="stat-item">
+            <i class="fas fa-database"></i>
+            <span>系统总控 · 三域合一</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-globe"></i>
+            <span>安全网关 · 实时会话</span>
+        </div>
+        <div class="stat-item">
+            <i class="far fa-clock"></i>
+            <span id="liveTime" class="live-clock">--:--:--</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-shield-virus"></i>
+            <span>管理权限 · 加密通道</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // 优雅的卡片跳转逻辑 (新标签页打开，保留原导航页)
+        const cards = document.querySelectorAll('.admin-card');
+        cards.forEach(card => {
+            // 添加鼠标手型
+            card.style.cursor = 'pointer';
+            const url = card.getAttribute('data-url');
+            if (url) {
+                card.addEventListener('click', (e) => {
+                    // 避免点到内部伪元素或文本选中等造成意外
+                    e.stopPropagation();
+                    // 采用新页面打开，提高管理效率
+                    window.open(url, '_blank');
+                });
+                // 可选：添加键盘无障碍支持 (角色提示)
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        window.open(url, '_blank');
+                    }
+                });
+            }
+        });
+
+        // 实时时钟更新 (优美的动态时间)
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            const dateString = `${year}.${month}.${day}`;
+            const fullDisplay = `${dateString}  ${timeString}`;
+            const timeElement = document.getElementById('liveTime');
+            if (timeElement) {
+                timeElement.textContent = fullDisplay;
+            }
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // 给卡片增加微微的鼠标涟漪效果 (优雅点缀)
+        function createRipple(event, element) {
+            const rect = element.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = event.clientX - rect.left - size / 2;
+            const y = event.clientY - rect.top - size / 2;
+            const ripple = document.createElement('span');
+            ripple.style.position = 'absolute';
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.borderRadius = '50%';
+            ripple.style.backgroundColor = 'rgba(79, 125, 243, 0.2)';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.transform = 'scale(0)';
+            ripple.style.transition = 'transform 0.5s ease, opacity 0.6s';
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            ripple.style.zIndex = '5';
+            element.style.position = 'relative';
+            element.style.overflow = 'hidden';
+            element.appendChild(ripple);
+            requestAnimationFrame(() => {
+                ripple.style.transform = 'scale(4)';
+                ripple.style.opacity = '0';
+            });
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // 仅当点击卡片且不是点击内部链接或者有特殊需求时，产生涟漪（不影响跳转）
+                // 为了视觉反馈添加
+                createRipple(e, card);
+                // 注意: 因为卡片有click跳转，涟漪不会阻塞跳转，增加体验感
+            });
+        });
+
+        // 额外对端点badge增加hover提示浮窗效果（轻提示）
+        const badges = document.querySelectorAll('.endpoint-badge');
+        badges.forEach(badge => {
+            badge.addEventListener('mouseenter', (e) => {
+                const tooltip = document.createElement('div');
+                tooltip.textContent = '点击卡片直接访问 ↪';
+                tooltip.style.position = 'fixed';
+                tooltip.style.background = '#1f2b48e6';
+                tooltip.style.color = '#f0f3ff';
+                tooltip.style.padding = '4px 12px';
+                tooltip.style.borderRadius = '24px';
+                tooltip.style.fontSize = '0.7rem';
+                tooltip.style.fontWeight = '400';
+                tooltip.style.backdropFilter = 'blur(4px)';
+                tooltip.style.zIndex = '999';
+                tooltip.style.pointerEvents = 'none';
+                tooltip.style.whiteSpace = 'nowrap';
+                tooltip.style.fontFamily = 'Inter, sans-serif';
+                document.body.appendChild(tooltip);
+                const move = (ev) => {
+                    tooltip.style.left = (ev.clientX + 15) + 'px';
+                    tooltip.style.top = (ev.clientY - 25) + 'px';
+                };
+                const removeTooltip = () => {
+                    tooltip.remove();
+                    badge.removeEventListener('mousemove', move);
+                    badge.removeEventListener('mouseleave', removeTooltip);
+                };
+                badge.addEventListener('mousemove', move);
+                badge.addEventListener('mouseleave', removeTooltip);
+            });
+        });
+
+        // 背景装饰粒子（轻度优雅的悬浮点，提升质感）
+        function addFloatingDots() {
+            const dotCount = 25;
+            for (let i = 0; i < dotCount; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('floating-dot');
+                const size = Math.random() * 6 + 2;
+                dot.style.width = `${size}px`;
+                dot.style.height = `${size}px`;
+                dot.style.left = `${Math.random() * 100}%`;
+                dot.style.top = `${Math.random() * 100}%`;
+                dot.style.animation = `floatDot ${Math.random() * 12 + 8}s infinite ease-in-out`;
+                dot.style.opacity = Math.random() * 0.3 + 0.1;
+                document.body.appendChild(dot);
+            }
+        }
+
+        // 动态增加动画关键帧
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = `
+            @keyframes floatDot {
+                0% {
+                    transform: translateY(0px) translateX(0px);
+                }
+                50% {
+                    transform: translateY(-20px) translateX(8px);
+                }
+                100% {
+                    transform: translateY(0px) translateX(0px);
+                }
+            }
+            .floating-dot {
+                position: fixed;
+                border-radius: 50%;
+                background: rgba(100, 140, 240, 0.35);
+                filter: blur(1px);
+                z-index: 0;
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+        addFloatingDots();
+
+        // 控制台输出优雅启动信息
+        console.log("%c✨ 管理员导航已启动 | 琉璃之境总控面板 ✨", "color: #3b5fcf; font-size: 14px; font-weight: 500;");
+        console.log("%c订单管理 | 作品库 | 委托订单  —— 点击卡片即可在新标签页打开对应管理系统", "color: #5b6e8c; font-size: 12px;");
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+// /root/WDSJSD/payment-system/routes/pay.js
+const express = require("express");
+const axios = require("axios");
+const router = express.Router();
+const QRCode = require('qrcode');
+const Order = require("../models/Order");
+const Product = require("../../models/Product");
+const { md5 } = require("../utils/sign");
+const config = require("../config");
+const customController = require("../../custom-system/controllers/customController");
+const { optionalAuth } = require("../../user-system/middleware/auth");
+
+router.use(optionalAuth);
+
+/*----------- 发货逻辑 --------------*/
+/**
+ * 执行商品发货操作
+ * @param {Object} order - 订单对象
+ * @param {Object} product - 商品对象
+ * @returns {Promise<void>}
+ */
+async function deliver(order, product) {
+  if (order.delivered) {
+    console.log("已发货，跳过:", order.payId);
+    return;
+  }
+
+  console.log("开始发货:", order.payId);
+  console.log("商品:", product.title);
+
+  // ⭐ 在这里写你的真实发货逻辑
+  order.delivered = true;
+  await order.save();
+
+  console.log("发货完成:", order.payId);
+}
+
+/*----------- 订单创建接口 --------------*/
+/**
+ * STEP 1: 创建订单
+ * POST /api/pay/create
+ */
+router.post("/create", async (req, res) => {
+  try {
+    console.log("========== 收到创建订单请求 ==========");
+    console.log("请求参数:", JSON.stringify(req.body, null, 2));
+    
+    const { productId, type, customOrderId, customData } = req.body;
+
+    // 验证支付方式
+    if (!["1", "2"].includes(String(type))) {
+      return res.json({ success: false, msg: "支付方式错误" });
+    }
+
+    const payId = Date.now().toString();
+    let price;
+    let param;
+    let productName = "";
+    let orderType = "product";
+    let finalProductId = productId;
+    
+    // 👉 定制订单：完整需求存本地 Order.customPayload；param 仅传短串（支付平台通常限制 ~200 字）
+    if (customData) {
+      const v = customController.validateRequirementPayload(customData);
+      if (!v.ok) {
+        return res.json({ success: false, msg: v.msg });
+      }
+      price = "5.00";
+      orderType = "custom";
+      productName = "定制作品诚意金";
+      finalProductId = "custom_deposit";
+      param = JSON.stringify({ type: "custom" });
+    } 
+    // 👉 普通商品：查询数据库
+    else {
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.json({ success: false, msg: "商品不存在" });
+      }
+      price = Number(product.price).toFixed(2);
+      productName = product.title;
+      param = productId;
+    }
+
+    // 生成签名（V免检签名规则：md5(payId + param + type + price + 通讯密钥)）
+    const sign = md5(payId + param + type + price + config.PAY_KEY);
+    
+    console.log("支付请求参数:", { payId, type, price, param, sign });
+
+    // 请求支付平台
+    const result = await axios.get(config.PAY_API, {
+      params: {
+        payId,
+        type,
+        price,
+        param,
+        sign,
+        isHtml: 0,
+        notifyUrl: `${config.DOMAIN}/api/pay/notify`
+      }
+    });
+
+    console.log("支付接口返回：", result.data);
+
+    if (result.data.code !== 1) {
+      return res.json({ success: false, msg: result.data.msg || "支付平台错误" });
+    }
+
+    const payData = result.data.data;
+
+    // 保存订单到数据库
+    const orderDoc = {
+      payId,
+      orderId: payData.orderId,
+      productId: finalProductId,
+      productName: productName,
+      price: Number(price),
+      reallyPrice: Number(payData.reallyPrice),
+      payType: Number(type),
+      payUrl: payData.payUrl,
+      status: "pending",
+      expireAt: new Date(Date.now() + 10 * 60 * 1000),
+      orderType: orderType
+    };
+    if (orderType === "custom") {
+      orderDoc.customPayload = customData;
+    }
+    if (req.user) {
+      orderDoc.userId = req.user._id.toString();
+    }
+    await Order.create(orderDoc);
+
+    res.json({
+      success: true,
+      payId,
+      payUrl: payData.payUrl
+    });
+    
+  } catch (err) {
+    console.error("创建订单失败:", err);
+    res.json({ success: false, msg: "服务器异常" });
+  }
+});
+
+/*----------- 订单查询接口 --------------*/
+/**
+ * STEP 2: 查询订单信息（支付页面使用）
+ * GET /api/pay/getOrder
+ */
+router.get("/getOrder", async (req, res) => {
+  const { payId } = req.query;
+  const order = await Order.findOne({ payId });
+
+  if (!order) {
+    return res.json({ code: 0 });
+  }
+
+  res.json({
+    code: 1,
+    data: {
+      payId: order.payId,
+      payUrl: order.payUrl,
+      payType: order.payType,
+      price: order.price,
+      reallyPrice: order.reallyPrice,
+      date: Math.floor(order.createdAt.getTime() / 1000),
+      state: order.status === "paid" ? 1 : 0,
+      timeOut: 10
+    }
+  });
+});
+
+/*----------- 支付状态轮询接口 --------------*/
+/**
+ * STEP 3: 轮询检查支付状态
+ * GET /api/pay/checkOrder
+ */
+router.get("/checkOrder", async (req, res) => {
+  const { payId } = req.query;
+  const order = await Order.findOne({ payId });
+
+  if (!order) {
+    return res.json({ code: 0, data: "订单不存在" });
+  }
+
+  // 支付成功：商品单去资料页；委托诚意金回定制大厅；积分兑换去资料页
+  if (order.status === "paid") {
+    if (order.orderType === "custom") {
+      console.log(`[轮询] 委托诚意金已支付: ${payId}，回定制大厅`);
+      return res.json({
+        code: 1,
+        data: { redirect: "/custom-hall.html?commissionPublished=1" }
+      });
+    }
+    console.log(`[轮询] 订单已支付: ${payId}，跳转到信息填写页面`);
+    return res.json({
+      code: 1,
+      data: "/success-info.html?payId=" + payId
+    });
+  }
+
+  // 检查是否过期
+  if (order.expireAt && new Date() > order.expireAt) {
+    console.log(`[轮询] 订单已过期: ${payId}`);
+    return res.json({
+      code: 0,
+      data: "订单已过期"
+    });
+  }
+
+  res.json({
+    code: 0,
+    data: "等待支付"
+  });
+});
+
+
+/*----------- 用户提交资料接口 --------------*/
+/**
+ * STEP 4: 用户提交服务器信息
+ * POST /api/pay/submitInfo
+ */
+router.post("/submitInfo", async (req, res) => {
+  try {
+
+    const {
+      payId,
+      contactType,
+      contactValue,
+      serverAccount,
+      serverPassword
+    } = req.body;
+
+    /* ========= 基础校验 ========= */
+
+    if (!payId) {
+      return res.json({ success: false, msg: "订单不存在" });
+    }
+
+    if (!["wechat", "qq"].includes(contactType)) {
+      return res.json({ success: false, msg: "联系方式错误" });
+    }
+
+    if (!contactValue?.trim() ||
+        !serverAccount?.trim() ||
+        !serverPassword?.trim()) {
+      return res.json({ success: false, msg: "请填写完整信息" });
+    }
+
+    /* ========= 查找订单 ========= */
+
+    const order = await Order.findOne({
+      payId,
+      status: "paid"
+    });
+
+    if (!order) {
+      return res.json({ success: false, msg: "订单未支付或不存在" });
+    }
+
+    /* ========= 防重复提交 ========= */
+
+    if (order.submitAt) {
+      return res.json({
+        success: false,
+        msg: "请勿重复提交"
+      });
+    }
+
+    /* ========= 保存资料 ========= */
+
+    order.contactType = contactType;
+    order.contactValue = contactValue.trim();
+    order.serverAccount = serverAccount.trim();
+    order.serverPassword = serverPassword.trim();
+    order.submitAt = new Date();
+
+    await order.save();
+
+    console.log("用户资料提交成功:", payId);
+
+    res.json({
+      success: true,
+      msg: "提交成功"
+    });
+
+  } catch (err) {
+    console.error("submitInfo异常:", err);
+    res.json({
+      success: false,
+      msg: "服务器异常"
+    });
+  }
+});
+
+/*----------- 二维码生成接口 --------------*/
+/**
+ * 生成支付二维码图片
+ * GET /api/pay/enQrcode?url=xxx
+ */
+router.get('/enQrcode', async (req, res) => {
+    const startTime = Date.now();
+    try {
+        const { url } = req.query;
+        
+        if (!url) {
+            console.log('[二维码] 错误: url参数为空');
+            return res.status(400).send('url参数不能为空');
+        }
+        
+        console.log(`[二维码] 开始生成，URL长度: ${url.length}`);
+        
+        // 验证URL格式
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            console.log('[二维码] 警告: URL格式可能不正确:', url.substring(0, 50));
+        }
+        
+        // 生成二维码 Buffer
+        const qrCodeBuffer = await QRCode.toBuffer(url, {
+            width: 300,
+            margin: 2,
+            errorCorrectionLevel: 'M',
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            }
+        });
+        
+        const elapsed = Date.now() - startTime;
+        console.log(`[二维码] 生成成功，耗时: ${elapsed}ms`);
+        
+        // 设置响应头
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Length', qrCodeBuffer.length);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        // 返回二维码图片
+        res.send(qrCodeBuffer);
+        
+    } catch (err) {
+        console.error('[二维码] 生成失败:', err);
+        res.status(500).send('生成二维码失败');
+    }
+});
+
+
+/*----------- 支付回调通知接口 --------------*/
+/**
+ * STEP 4: 支付平台回调通知（核心发货逻辑）
+ * GET /api/pay/notify
+ */
+router.get("/notify", async (req, res) => {
+  try {
+    console.log("收到支付回调:", req.query);
+
+    const { payId, param, type, price, reallyPrice, sign } = req.query;
+    let parsedParam;
+
+    try {
+       parsedParam = JSON.parse(param);
+    } catch {
+       // 👉 老订单 / 普通商品
+       parsedParam = {
+         type: "product",
+         productId: param
+       };
+    }
+
+    // 验签：验证回调数据的真实性
+    const localSign = md5(payId + param + type + price + reallyPrice + config.PAY_KEY);
+    if (localSign !== sign) {
+      console.log("签名错误");
+      return res.send("error_sign");
+    }
+
+    // 原子更新订单状态（防止重复处理）
+    const order = await Order.findOneAndUpdate(
+      {
+        payId,
+        status: "pending"
+      },
+      {
+        status: "paid",
+        reallyPrice,
+        payType: type,
+        paidAt: new Date()
+      },
+      { new: true }
+    );
+
+    // 防止重复通知
+    if (!order) {
+      console.log("重复通知:", payId);
+      return res.send("success");
+    }
+
+    // 金额校验
+    if (Number(price) !== Number(order.price)) {
+      console.log("金额异常");
+      return res.send("error_price");
+    }
+
+    console.log("订单支付成功:", payId);
+    console.log("订单类型:", order.orderType);
+
+    // ===== 处理定制订单（需求正文在 Order.customPayload，避免 param 超长）=====
+    if (order.orderType === "custom") {
+      let payload = order.customPayload;
+      if (!payload && parsedParam?.type === "custom" && parsedParam.customData) {
+        payload = parsedParam.customData;
+      }
+      if (payload) {
+        try {
+          await customController.createOrderAfterPayment(payId, payload, order.userId);
+          console.log("✅ 定制委托单创建成功");
+        } catch (err) {
+          console.error("创建定制委托单失败:", err);
+        }
+      } else {
+        console.error("定制订单已支付但未找到 customPayload，payId=", payId);
+      }
+      return res.send("success");
+    }
+
+    // 普通商品：查询商品并发货
+    const product = await Product.findById(order.productId);
+    if (!product) {
+      return res.send("error_product");
+    }
+
+    // 执行发货
+    await deliver(order, product);
+
+    res.send("success");
+  } catch (err) {
+    console.error("notify异常:", err);
+    res.send("error");
+  }
+});
+
+/*----------- 管理员订单列表 --------------*/
+/**
+ * GET /api/pay/admin/orders
+ * 获取待处理订单
+ */
+router.get("/admin/orders", async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      status: "paid",
+      finished: false,
+      contactValue: { $exists: true }
+    })
+    .sort({ paidAt: -1 }) // 最新优先
+    .limit(50);
+
+    res.json({
+      success: true,
+      data: orders
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
+  }
+});
+
+/*----------- 管理员完成订单接口 --------------*/
+/**
+ * POST /api/pay/finish
+ * 标记订单已处理
+ */
+router.post("/finish", async (req, res) => {
+  try {
+
+    const { payId } = req.body;
+
+    if (!payId) {
+      return res.json({
+        success: false,
+        msg: "缺少 payId"
+      });
+    }
+
+    // 必须是已支付订单
+    const order = await Order.findOne({
+      payId,
+      status: "paid"
+    });
+
+    if (!order) {
+      return res.json({
+        success: false,
+        msg: "订单不存在或未支付"
+      });
+    }
+
+    if (order.finished) {
+      return res.json({
+        success: false,
+        msg: "订单已完成"
+      });
+    }
+
+    order.finished = true;
+    order.finishedAt = new Date();
+
+    await order.save();
+
+    console.log("订单已完成:", payId);
+
+    res.json({
+      success: true
+    });
+
+  } catch (err) {
+    console.error("finish接口异常:", err);
+    res.json({
+      success: false
+    });
+  }
+});
+
+module.exports = router;

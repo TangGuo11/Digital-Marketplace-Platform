@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>武韵·定制委托</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #1a2a32 0%, #0e1a1f 100%);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            color: #e9f4f8;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .hero { text-align: center; margin-bottom: 2rem; }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #ffd966, #ffb347, #ff8c42);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero h1 i { font-size: 2.5rem; color: #ffb347; }
+
+        .main-layout {
+            display: flex;
+            gap: 1.2rem;
+            align-items: stretch;
+        }
+
+        .publish-section {
+            flex: 0 0 85%;
+            min-width: 0;
+            background: linear-gradient(145deg, #1e3a2f, #152e24);
+            border-radius: 32px;
+            padding: 1.8rem;
+            border: 2px solid #ffb347;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: flex-basis 0.28s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-layout.is-open .publish-section { flex-basis: 35%; }
+
+        .publish-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #ffd966;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-group { margin-bottom: 1.2rem; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffdfb3;
+            font-weight: 500;
+        }
+
+        .form-group label i { margin-right: 8px; width: 20px; }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2a453a;
+            border: 1px solid #5f8b78;
+            border-radius: 20px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-group textarea { resize: vertical; min-height: 120px; }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffb347;
+            box-shadow: 0 0 0 3px rgba(255, 180, 71, 0.3);
+        }
+
+        .contact-group { display: flex; gap: 12px; }
+        .contact-group select { width: 35%; }
+        .contact-group input { width: 65%; }
+
+        .publish-form-btn {
+            width: 100%;
+            background: linear-gradient(95deg, #ff8c42, #ffb347);
+            border: none;
+            padding: 14px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 40px;
+            color: #1e2a2f;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .publish-form-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .publish-form-btn:active { transform: translateY(1px); }
+        .publish-form-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .deposit-note {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #a8e6cf;
+        }
+
+        .deposit-note i { margin-right: 4px; }
+
+        .orders-rail {
+            flex: 0 0 92px;
+            min-width: 92px;
+            background: radial-gradient(circle at 0% 0%, #284733 0%, #151f1b 55%, #101614 100%);
+            border-radius: 26px;
+            border: 1px solid rgba(255,180,71,0.55);
+            box-shadow: 0 10px 26px rgba(0,0,0,0.55), inset 0 0 18px rgba(0,0,0,0.55);
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .orders-rail::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.06);
+            pointer-events: none;
+        }
+
+        .orders-rail-title {
+            font-size: 0.9rem;
+            color: #ffdfb3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            z-index: 1;
+        }
+
+        .orders-rail-title i {
+            color: #ffb347;
+            font-size: 1.2rem;
+            filter: drop-shadow(0 0 4px rgba(255,180,71,0.7));
+        }
+
+        .orders-rail-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
+            flex: 1;
+            z-index: 1;
+        }
+
+        .rail-filter-btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            background: rgba(18, 29, 24, 0.9);
+            color: #cddbe1;
+            font-size: 0.78rem;
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: all 0.18s;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .rail-filter-btn.active {
+            background: linear-gradient(135deg, #ffb347, #ff8c42);
+            color: #1e2a2f;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 12px rgba(255,180,71,0.8);
+        }
+
+        .rail-filter-btn:hover:not(.active) { background: rgba(255,180,71,0.2); }
+
+        .orders-rail-toggle {
+            margin-top: 4px;
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid rgba(255,180,71,0.6);
+            background: radial-gradient(circle at 0% 0%, #27352f 0%, #101916 60%);
+            color: #ffdfb3;
+            cursor: pointer;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            transition: all 0.2s;
+            z-index: 1;
+        }
+
+        .orders-rail-toggle i {
+            color: #ffb347;
+            transition: transform 0.2s;
+        }
+
+        .main-layout.is-open .orders-rail-toggle i { transform: rotate(180deg); }
+
+        .orders-rail-toggle:hover {
+            background: radial-gradient(circle at 0% 0%, #31433b 0%, #131f1b 60%);
+        }
+
+        .orders-panel {
+            flex: 0 0 0;
+            min-width: 0;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(8px);
+            transition: flex-basis 0.28s ease, opacity 0.2s ease, transform 0.28s ease;
+        }
+
+        .main-layout.is-open .orders-panel {
+            flex-basis: 65%;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        .orders-card {
+            height: 100%;
+            background: rgba(16, 30, 26, 0.96);
+            border-radius: 28px;
+            border: 1px solid rgba(255,180,71,0.4);
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            overflow: hidden;
+        }
+
+        /* 展开卡片标题区居中 */
+        .orders-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .orders-title {
+            font-size: 1.25rem;
+            color: #ffdfb3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .orders-title i { color: #ffb347; }
+
+        .orders-subtitle {
+            font-size: 0.8rem;
+            color: #8fa5b0;
+        }
+
+        .orders-stats {
+            font-size: 0.8rem;
+            color: #9bb8c4;
+            margin-top: 2px;
+        }
+
+        .orders-tabs {
+            margin-top: 0.35rem;
+            display: none;
+            background: rgba(20, 34, 30, 0.9);
+            border-radius: 999px;
+            padding: 4px;
+            border: 1px solid rgba(255,180,71,0.25);
+            gap: 4px;
+            align-self: center;
+            flex-shrink: 0;
+        }
+
+        .orders-tab {
+            border: none;
+            background: transparent;
+            color: #cddbe1;
+            padding: 6px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.18s;
+            white-space: nowrap;
+        }
+
+        .orders-tab.active {
+            background: linear-gradient(135deg, #ffb347, #ff8c42);
+            color: #1e2a2f;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+        }
+
+        .orders-tab:hover:not(.active) { background: rgba(255,180,71,0.22); }
+
+        /* 修复空状态居中问题 */
+        .orders-grid {
+            margin-top: 0.55rem;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+            min-height: 0;
+        }
+
+        /* 有数据时使用网格布局 */
+        .orders-grid.has-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.2rem;
+            align-content: start;
+        }
+
+        /* 空状态时使用flex居中 */
+        .orders-grid.empty-state-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .orders-grid::-webkit-scrollbar { width: 6px; }
+        .orders-grid::-webkit-scrollbar-track { background: #2d3e44; border-radius: 10px; }
+        .orders-grid::-webkit-scrollbar-thumb { background: #ffb347; border-radius: 10px; }
+
+        .order-card {
+            background: rgba(30, 55, 45, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid rgba(100, 160, 120, 0.5);
+            padding: 1.1rem;
+            transition: all 0.3s;
+            height: fit-content;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            background: rgba(40, 75, 60, 0.7);
+            border-color: #ffb347;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-accepted { background: #2a9d8f; color: white; }
+        .status-completed { background: #6c9ebf; color: white; }
+        .status-rejected { background: #e76f51; color: white; }
+
+        .order-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 10px 0 8px;
+            color: #ffdfb3;
+            word-break: break-word;
+        }
+
+        .order-description {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: #cbdde6;
+            margin-bottom: 10px;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .order-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(100, 150, 90, 0.3);
+        }
+
+        .budget {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffd966;
+        }
+
+        .budget i {
+            font-size: 0.9rem;
+            margin-right: 4px;
+        }
+
+        .date {
+            font-size: 0.65rem;
+            color: #9bb8c4;
+        }
+
+        .reject-reason {
+            margin-top: 6px;
+            padding: 6px 9px;
+            background: rgba(231, 111, 81, 0.18);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            color: #ffb08c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(30, 55, 45, 0.4);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            color: #cddbe1;
+            margin: 0;
+        }
+
+        .pay-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pay-modal.active { display: flex; }
+
+        .pay-modal-content {
+            background: linear-gradient(145deg, #1e3a2f, #152e24);
+            max-width: 400px;
+            width: 90%;
+            border-radius: 32px;
+            padding: 2rem;
+            border: 2px solid #ffb347;
+            animation: fadeUp 0.3s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pay-modal-content h2 {
+            text-align: center;
+            color: #ffd966;
+            margin-bottom: 1rem;
+        }
+
+        .pay-amount {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffb347;
+            margin: 1rem 0;
+        }
+
+        .pay-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .pay-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pay-btn.alipay { background: linear-gradient(135deg, #1677ff, #0a5fcf); color: white; }
+        .pay-btn.wechat { background: linear-gradient(135deg, #07c160, #05a850); color: white; }
+
+        .pay-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+        .pay-close {
+            width: 100%;
+            background: #3b5c68;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e35;
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: #ffdfb3;
+            border-left: 4px solid #ffb347;
+            z-index: 2000;
+            animation: fadeInOut 2.5s ease;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        .commission-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: commissionOverlayIn 0.2s ease;
+        }
+
+        @keyframes commissionOverlayIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .commission-dialog {
+            background: linear-gradient(145deg, #1e3a2f, #152e24);
+            border: 2px solid #ffb347;
+            border-radius: 20px;
+            padding: 1.75rem 1.5rem 1.25rem;
+            max-width: 22rem;
+            width: 100%;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+            text-align: center;
+        }
+
+        .commission-dialog-msg {
+            color: #ffdfb3;
+            font-size: 1.05rem;
+            line-height: 1.55;
+            margin-bottom: 1.25rem;
+        }
+
+        .commission-dialog-btn {
+            background: linear-gradient(135deg, #ffb347, #ff8c42);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 999px;
+            padding: 0.55rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .commission-dialog-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 1rem; }
+
+            .main-layout { flex-direction: column; }
+
+            .publish-section { flex-basis: 100% !important; }
+
+            .orders-rail { display: none; }
+
+            .orders-panel {
+                flex-basis: auto;
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
+                margin-top: 1rem;
+            }
+
+            .orders-card {
+                border-radius: 26px;
+                padding: 1.1rem;
+            }
+
+            /* 小屏：标题、副标题、胶囊都居中 */
+            .orders-header {
+                align-items: center;
+                text-align: center;
+            }
+
+            .orders-title {
+                justify-content: center;
+            }
+
+            .orders-tabs {
+                display: inline-flex;
+                align-self: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .orders-grid {
+                margin-top: 0.8rem;
+                max-height: none;
+            }
+
+            .orders-grid.has-data {
+                grid-template-columns: 1fr;
+            }
+
+            .empty-state-grid {
+                min-height: 300px;
+            }
+        }
+
+        @media (min-width: 901px) {
+            .orders-tabs { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>
+            <i class="fas fa-cube"></i>
+            定制委托大厅
+        </h1>
+    </div>
+
+    <div class="main-layout" id="mainLayout">
+        <div class="publish-section">
+            <h2><i class="fas fa-pen-fancy"></i> 发布定制委托</h2>
+            <form id="publishForm" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> 作品标题 *</label>
+                    <input type="text" id="title" placeholder="例如: 中世纪城堡/苦力怕皮肤" maxlength="100" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> 详细需求 *</label>
+                    <textarea id="description" placeholder="请详细描述您的需求（至少10字）" maxlength="2000" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-dollar-sign"></i> 预算金额 (¥) *</label>
+                    <input type="number" id="budget" placeholder="您愿意支付的最终价格" min="1" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-address-card"></i> 联系方式 *</label>
+                    <div class="contact-group">
+                        <select id="contactType">
+                            <option value="qq">QQ号</option>
+                            <option value="wechat">微信号</option>
+                        </select>
+                        <input type="text" id="contact" placeholder="填写您的QQ号/微信号" required>
+                    </div>
+                </div>
+                <button type="submit" class="publish-form-btn" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> 发布委托
+                </button>
+                <div class="deposit-note">
+                    <i class="fas fa-info-circle"></i> 发起委托需要5元诚意金
+                </div>
+            </form>
+        </div>
+
+        <aside class="orders-rail">
+            <div class="orders-rail-title">
+                <i class="fas fa-list-alt"></i>
+                <span>委托列表</span>
+            </div>
+            <div class="orders-rail-filters">
+                <button class="rail-filter-btn active" data-status="all">全部</button>
+                <button class="rail-filter-btn" data-status="accepted">制作中</button>
+                <button class="rail-filter-btn" data-status="completed">已完成</button>
+                <button class="rail-filter-btn" data-status="rejected">已拒绝</button>
+            </div>
+            <button type="button" class="orders-rail-toggle" id="togglePanelBtn">
+                <i class="fas fa-chevron-left"></i>
+                <span>展开</span>
+            </button>
+        </aside>
+
+        <section class="orders-panel">
+            <div class="orders-card">
+                <div class="orders-header">
+                    <div class="orders-title">
+                        <i class="fas fa-scroll"></i> 委托列表
+                    </div>
+                    <p class="orders-subtitle">根据状态查看不同阶段的委托</p>
+                    <div class="orders-stats">
+                        总数：<strong id="totalCount">0</strong>
+                    </div>
+                </div>
+
+                <div class="orders-tabs">
+                    <button class="orders-tab active" data-status="all">全部</button>
+                    <button class="orders-tab" data-status="accepted">制作中</button>
+                    <button class="orders-tab" data-status="completed">已完成</button>
+                    <button class="orders-tab" data-status="rejected">已拒绝</button>
+                </div>
+
+                <div id="ordersGrid" class="orders-grid">
+                    <div class="loading"><i class="fas fa-spinner fa-pulse"></i> 加载委托单中...</div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="payModal" class="pay-modal">
+    <div class="pay-modal-content">
+        <h2><i class="fas fa-credit-card"></i> 选择支付方式</h2>
+        <div class="pay-amount">
+            ¥<span id="payAmount">5</span>
+        </div>
+        <div class="pay-buttons">
+            <button class="pay-btn alipay" id="payAlipayBtn">
+                <i class="fab fa-alipay"></i> 支付宝支付
+            </button>
+            <button class="pay-btn wechat" id="payWechatBtn">
+                <i class="fab fa-weixin"></i> 微信支付
+            </button>
+        </div>
+        <button class="pay-close" id="closePayModalBtn">取消</button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api/custom';
+    const PAY_API = '/api/pay';
+
+    let currentFilter = 'all';
+    let allOrders = [];
+    let depositConfig = null;
+    let pendingRequirementData = null;
+
+    function showMessage(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = msg;
+        toast.style.backgroundColor = isError ? '#8b3c2c' : '#2c5a4a';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    /** 支付诚意金成功后：页面内提示窗口（非浏览器 alert） */
+    function showCommissionPublishedDialog() {
+        const overlay = document.createElement('div');
+        overlay.className = 'commission-dialog-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-labelledby', 'commission-dialog-title');
+        overlay.innerHTML = `
+            <div class="commission-dialog">
+                <p id="commission-dialog-title" class="commission-dialog-msg">委托已经发布成功，等待作者接收</p>
+                <button type="button" class="commission-dialog-btn">确定</button>
+            </div>
+        `;
+        const close = () => overlay.remove();
+        overlay.querySelector('.commission-dialog-btn').addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        document.body.appendChild(overlay);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '未知';
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now - d) / 1000 / 60);
+        if (diff < 1) return '刚刚';
+        if (diff < 60) return diff + '分钟前';
+        if (diff < 1440) return Math.floor(diff / 60) + '小时前';
+        return Math.floor(diff / 1440) + '天前';
+    }
+
+    function getStatusText(status) {
+        const map = { accepted: '制作中', completed: '已完成', rejected: '已拒绝' };
+        return map[status] || status;
+    }
+
+    function getStatusClass(status) { return 'status-' + status; }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function truncateDesc(desc, maxLen = 100) {
+        if (!desc) return '';
+        if (desc.length <= maxLen) return escapeHtml(desc);
+        return escapeHtml(desc.substring(0, maxLen)) + '...';
+    }
+
+    function updateGridLayout() {
+        const gridContainer = document.getElementById('ordersGrid');
+        const hasData = gridContainer.querySelectorAll('.order-card').length > 0;
+        
+        if (hasData) {
+            gridContainer.classList.add('has-data');
+            gridContainer.classList.remove('empty-state-grid');
+        } else {
+            gridContainer.classList.remove('has-data');
+            gridContainer.classList.add('empty-state-grid');
+        }
+    }
+
+    function renderOrders() {
+        const container = document.getElementById('ordersGrid');
+        const totalCountEl = document.getElementById('totalCount');
+
+        if (totalCountEl) totalCountEl.textContent = allOrders.length;
+
+        let filtered = allOrders;
+        if (currentFilter !== 'all') {
+            filtered = allOrders.filter(order => order.status === currentFilter);
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>暂无委托单</p>
+                </div>
+            `;
+            updateGridLayout();
+            return;
+        }
+
+        container.innerHTML = filtered.map(order => {
+            let rejectReasonHtml = '';
+            if (order.status === 'rejected' && order.rejectedReason) {
+                rejectReasonHtml = '<div class="reject-reason"><i class="fas fa-info-circle"></i> ' + escapeHtml(order.rejectedReason) + '</div>';
+            }
+            return `
+                <div class="order-card">
+                    <div>
+                        <span class="status-badge ${getStatusClass(order.status)}">${getStatusText(order.status)}</span>
+                    </div>
+                    <div class="order-title">${escapeHtml(order.title)}</div>
+                    <div class="order-description">${truncateDesc(order.description, 100)}</div>
+                    ${rejectReasonHtml}
+                    <div class="order-meta">
+                        <div class="budget"><i class="fas fa-coins"></i> ¥${Number(order.budget).toFixed(2)}</div>
+                        <div class="date"><i class="far fa-clock"></i> ${formatDate(order.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        updateGridLayout();
+    }
+
+    async function fetchOrders() {
+        try {
+            const res = await fetch(API_BASE + '/public');
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.data)) {
+                allOrders = data.data.filter(order => order.status !== 'pending');
+                renderOrders();
+            } else {
+                document.getElementById('ordersGrid').innerHTML = '<div class="empty-state">加载失败，请刷新重试</div>';
+                updateGridLayout();
+            }
+        } catch (err) {
+            document.getElementById('ordersGrid').innerHTML = '<div class="empty-state">网络错误，请检查连接</div>';
+            updateGridLayout();
+        }
+    }
+
+    async function getDepositConfig() {
+        try {
+            const response = await fetch(API_BASE + '/deposit-config');
+            const result = await response.json();
+
+            if (result.success) {
+                depositConfig = result.data;
+                document.getElementById('payAmount').textContent = depositConfig.price;
+                return true;
+            } else {
+                showMessage(result.msg || '获取系统配置失败', true);
+                return false;
+            }
+        } catch (err) {
+            showMessage('获取系统配置失败', true);
+            return false;
+        }
+    }
+
+    async function createPayment(payType) {
+        if (!depositConfig || !pendingRequirementData) {
+            showMessage('数据错误，请重新提交', true);
+            return false;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 创建订单中...';
+
+        try {
+            const response = await fetch(PAY_API + '/create', {
+                method: 'POST',
+                headers: typeof Auth !== 'undefined' ? Auth.authHeaders({ 'Content-Type': 'application/json' }) : { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    productId: depositConfig.productId,
+                    type: payType,
+                    customData: pendingRequirementData
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.payId) {
+                window.location.href = '/payPage/pay.html?payId=' + result.payId + '&redirect=/custom-hall.html';
+                return true;
+            } else {
+                showMessage(result.msg || '创建支付订单失败', true);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布委托';
+                return false;
+            }
+        } catch (err) {
+            showMessage('网络错误，请稍后重试', true);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布委托';
+            return false;
+        }
+    }
+
+    function showPayModal() { document.getElementById('payModal').classList.add('active'); }
+    function hidePayModal() { document.getElementById('payModal').classList.remove('active'); }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const budget = parseFloat(document.getElementById('budget').value);
+        const contact = document.getElementById('contact').value.trim();
+        const contactType = document.getElementById('contactType').value;
+
+        if (!title || title.length > 100) { showMessage('标题不能为空且不超过100字', true); return; }
+        if (!description || description.length < 10 || description.length > 2000) { showMessage('需求描述需要在10-2000字之间', true); return; }
+        if (!budget || budget <= 0) { showMessage('预算必须大于0', true); return; }
+        if (!contact) { showMessage('请填写' + (contactType === 'qq' ? 'QQ号' : '微信号'), true); return; }
+        if (!depositConfig) { showMessage('正在加载配置，请稍后再试', true); return; }
+
+        pendingRequirementData = { title, description, budget, contact, contactType };
+        showPayModal();
+    }
+
+    function bindFilters() {
+        const buttons = document.querySelectorAll('.rail-filter-btn, .orders-tab');
+
+        function updateActive(status) {
+            document.querySelectorAll('.rail-filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.status === status);
+            });
+            document.querySelectorAll('.orders-tab').forEach(b => {
+                b.classList.toggle('active', b.dataset.status === status);
+            });
+        }
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const status = btn.dataset.status;
+                currentFilter = status;
+                updateActive(status);
+                renderOrders();
+            });
+        });
+    }
+
+    function bindTogglePanel() {
+        const layout = document.getElementById('mainLayout');
+        const toggleBtn = document.getElementById('togglePanelBtn');
+
+        toggleBtn.addEventListener('click', () => {
+            const isOpen = layout.classList.toggle('is-open');
+            toggleBtn.querySelector('span').textContent = isOpen ? '收起' : '展开';
+        });
+    }
+
+    function bindPayModalEvents() {
+        const modal = document.getElementById('payModal');
+        const alipayBtn = document.getElementById('payAlipayBtn');
+        const wechatBtn = document.getElementById('payWechatBtn');
+        const closeBtn = document.getElementById('closePayModalBtn');
+
+        alipayBtn.onclick = async () => { hidePayModal(); await createPayment(2); };
+        wechatBtn.onclick = async () => { hidePayModal(); await createPayment(1); };
+
+        closeBtn.onclick = () => {
+            hidePayModal();
+            pendingRequirementData = null;
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布委托';
+        };
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                hidePayModal();
+                pendingRequirementData = null;
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布委托';
+            }
+        };
+    }
+
+    function checkPaymentResult() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paid = urlParams.get('paid');
+        if (paid === 'success') {
+            showMessage('支付成功！委托单已创建，等待作者接收！');
+            fetchOrders();
+            document.getElementById('publishForm').reset();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
+    async function init() {
+        document.getElementById('publishForm').addEventListener('submit', handleSubmit);
+        bindFilters();
+        bindTogglePanel();
+        bindPayModalEvents();
+
+        const configLoaded = await getDepositConfig();
+        if (!configLoaded) {
+            document.getElementById('ordersGrid').innerHTML = '<div class="empty-state">系统配置加载失败，请刷新页面重试</div>';
+            updateGridLayout();
+            return;
+        }
+
+        await fetchOrders();
+        checkPaymentResult();
+
+        const commissionParams = new URLSearchParams(window.location.search);
+        if (commissionParams.get('commissionPublished') === '1') {
+            showCommissionPublishedDialog();
+            commissionParams.delete('commissionPublished');
+            const qs = commissionParams.toString();
+            window.history.replaceState({}, document.title, window.location.pathname + (qs ? '?' + qs : ''));
+            await fetchOrders();
+            document.getElementById('publishForm').reset();
+        }
+
+        setInterval(fetchOrders, 30000);
+    }
+
+    init();
+</script>
+<script src="/js/auth.js"></script>
+<script>
+    Auth.mountUserBar();
+    Auth.refreshMe().then(user => {
+        if (!user) return;
+        if (user.qq) {
+            document.getElementById('contactType').value = 'qq';
+            document.getElementById('contact').value = user.qq;
+        } else if (user.wechat) {
+            document.getElementById('contactType').value = 'wechat';
+            document.getElementById('contact').value = user.wechat;
+        }
+    });
+</script>
+</body>
+</html>

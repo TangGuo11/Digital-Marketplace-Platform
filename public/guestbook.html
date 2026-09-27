@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>MC指令工坊 · 创想留言板</title>
+    <!-- 引入 Google Fonts & Font Awesome 6 + Minecraft 风格字体点缀 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 替换为你的背景图 */
+            background-image: url('/scb/wallpaper_legends_hosts/wallpaper_legends_hosts_1080x1920.webp');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            font-family: 'Inter', 'JetBrains Mono', monospace;
+            padding: 2rem 1.5rem 4rem;
+            color: #e2e8f0;
+            position: relative;
+        }
+        
+        /* 添加半透明遮罩层，提高文字可读性 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .message-board {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 顶部英雄区 — 固定位置 */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeSlideDown 0.6s ease-out;
+            background: rgba(20, 35, 30, 0.75);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            padding: 1rem 1rem;
+            border: 1px solid rgba(100, 130, 80, 0.5);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+            width: 100%;
+            position: sticky;
+            top: 1rem;
+            z-index: 10;
+        }
+        .hero-section h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #d4e65c, #7c9e3e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hero-section h1 i {
+            background: none;
+            color: #d4e65c;
+            text-shadow: 0 0 4px #5a7c2e;
+            font-size: 1.8rem;
+        }
+        /* 虚线更长 */
+        .hero-section .dotted-line {
+            border-top: 2px dashed #6f9e4f;
+            width: 200px;
+            margin: 0.6rem auto 0;
+        }
+
+        /* 发布卡片 - 居中按钮专属 */
+        .publish-card {
+            background: rgba(25, 40, 35, 0.88);
+            backdrop-filter: blur(6px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.5), 0 1px 0 0 rgba(140, 180, 100, 0.2);
+            padding: 1.8rem 2rem;
+            margin-bottom: 2.8rem;
+            border: 1px solid rgba(108, 148, 68, 0.6);
+            transition: all 0.2s;
+        }
+        .publish-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-weight: 700;
+            font-size: 1.4rem;
+            margin-bottom: 1.3rem;
+            color: #eef4c3;
+        }
+        .publish-title i {
+            color: #8bc34a;
+            font-size: 1.7rem;
+            filter: drop-shadow(0 2px 2px #00000055);
+        }
+        .message-input {
+            width: 100%;
+            background: #1f2c24;
+            border: 2px solid #4a6741;
+            border-radius: 1.5rem;
+            padding: 1rem 1.4rem;
+            font-size: 1rem;
+            font-family: 'Inter', monospace;
+            resize: vertical;
+            color: #f0f7e6;
+            transition: 0.2s;
+            margin-bottom: 0.8rem;
+        }
+        .message-input:focus {
+            outline: none;
+            border-color: #a5d66b;
+            box-shadow: 0 0 0 3px rgba(165, 214, 107, 0.3);
+            background: #1e3328;
+        }
+        .char-counter {
+            font-size: 0.75rem;
+            text-align: right;
+            color: #9ab87a;
+            margin-bottom: 1rem;
+            font-family: monospace;
+        }
+        /* 发布按钮区域 — 居中 */
+        .submit-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.6rem;
+        }
+        .submit-btn {
+            background: linear-gradient(105deg, #5f8742, #3f6128);
+            border: none;
+            padding: 0.9rem 2.8rem;
+            border-radius: 3rem;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #f9f6cf;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 0 #2c4420;
+            font-family: 'Inter', monospace;
+            letter-spacing: 0.5px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #2c4420;
+            background: linear-gradient(105deg, #6e9c49, #4d7632);
+        }
+        .submit-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #2c4420;
+        }
+
+        /* 留言流 — 草块卡片风格 */
+        .messages-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+        }
+        .message-item {
+            background: rgba(30, 45, 35, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 1.6rem;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+            border: 1px solid #6a8e4e;
+            overflow: hidden;
+            animation: fadeUp 0.4s ease-out;
+        }
+        .message-item:hover {
+            border-color: #9fc96b;
+            box-shadow: 0 20px 28px -12px rgba(0,0,0,0.6);
+            transform: translateY(-2px);
+        }
+        .message-header {
+            padding: 1rem 1.5rem 0.4rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #47663b;
+            background: rgba(20, 35, 25, 0.8);
+        }
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .avatar-icon {
+            background: #3c5e2f;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #e5ffb3;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: inset 0 1px 2px #7aa55a, 0 2px 4px black;
+            font-family: 'JetBrains Mono';
+        }
+        .user-name {
+            font-weight: 600;
+            color: #cfecb0;
+            background: #2c4633;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .timeago {
+            font-size: 0.7rem;
+            color: #b8d0a0;
+            background: #2f4330;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+        }
+        .message-content {
+            padding: 1.2rem 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #ecf7df;
+            word-break: break-word;
+            white-space: pre-wrap;
+            font-weight: 400;
+            background: rgba(0,0,0,0.2);
+        }
+        /* 底部按钮区域优化 - 更紧凑且可换行 */
+        .message-footer {
+            padding: 0.5rem 1.2rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border-top: 1px solid #47663b;
+            background: #1c2d24;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.3rem 0.7rem;
+            border-radius: 1.5rem;
+            transition: 0.15s;
+            color: #cfe3b5;
+        }
+        .action-btn i {
+            font-size: 0.85rem;
+        }
+        .action-btn.like:hover {
+            background: #4a2e2e;
+            color: #ffb3b3;
+        }
+        .action-btn.dislike:hover {
+            background: #2e3f4a;
+            color: #aad0ff;
+        }
+        .action-btn.comment:hover {
+            background: #2a4835;
+            color: #c0f0a0;
+        }
+        .comment-count {
+            margin-left: auto;
+            font-size: 0.7rem;
+            background: #2b412b;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            color: #c0e0a0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .comment-count i {
+            font-size: 0.7rem;
+        }
+
+        /* 评论区域 - 修复评论粘在一起的问题 */
+        .comments-section {
+            background: #1c2a23e6;
+            border-top: 1px solid #587a44;
+            padding: 1rem 1.5rem 1.2rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .comments-section.show-comments {
+            display: flex;
+        }
+        .comment-item {
+            background: #2a3d2e;
+            border-radius: 1rem;
+            padding: 0.8rem 1rem;
+            border-left: 4px solid #7cb342;
+            font-size: 0.88rem;
+            color: #e7f2da;
+            margin-bottom: 0.5rem;
+        }
+        .comment-item:last-child {
+            margin-bottom: 0;
+        }
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+            color: #bbdd99;
+        }
+        .comment-text {
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        
+        /* 评论表单 - 优化小屏幕显示 */
+        .new-comment-form {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .comment-input {
+            flex: 1;
+            min-width: 150px;
+            background: #253d2b;
+            border: 1px solid #6f9a4b;
+            border-radius: 2rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            color: #f0f7e0;
+        }
+        .comment-input:focus {
+            outline: none;
+            border-color: #b6e36c;
+        }
+        .comment-submit {
+            background: #486d38;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #f5ffdb;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .comment-submit:hover {
+            background: #5f8946;
+        }
+
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            margin: 2rem 0 1rem;
+        }
+        .load-btn {
+            background: #2c432a;
+            border: 1px solid #759c54;
+            padding: 0.6rem 2rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #d8f0be;
+        }
+        .load-btn:hover {
+            background: #456b38;
+            border-color: #b3e074;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            background: rgba(30, 50, 35, 0.85);
+            border-radius: 2rem;
+            color: #bdd7a8;
+            border: 1px dashed #7baa54;
+        }
+        .toast-msg {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2c1fe6;
+            color: #efffcf;
+            padding: 0.7rem 1.4rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            border-left: 4px solid #7bb842;
+            pointer-events: none;
+            font-family: monospace;
+        }
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.7rem;
+            color: #9ab177;
+            border-top: 1px solid #4c6e3a;
+            padding-top: 1.5rem;
+        }
+
+        /* 响应式优化 - 小屏幕按钮换行更美观 */
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .hero-section h1 { font-size: 1.4rem; }
+            .hero-section { padding: 0.8rem; top: 0.5rem; }
+            .hero-section .dotted-line { width: 150px; }
+            .publish-card { padding: 1.2rem; }
+            .submit-btn { padding: 0.7rem 2rem; font-size: 0.9rem;}
+            .message-footer {
+                gap: 0.5rem;
+                justify-content: flex-start;
+            }
+            .action-btn {
+                padding: 0.25rem 0.6rem;
+                font-size: 0.7rem;
+            }
+            .action-btn i {
+                font-size: 0.75rem;
+            }
+            .comment-count {
+                margin-left: 0;
+                font-size: 0.65rem;
+            }
+            /* 评论表单小屏幕优化 */
+            .new-comment-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .comment-input {
+                min-width: auto;
+                width: 100%;
+            }
+            .comment-submit {
+                width: auto;
+                align-self: flex-end;
+                white-space: nowrap;
+                padding: 0.6rem 1.5rem;
+            }
+        }
+
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .message-footer {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .action-btn {
+                flex: 0 0 auto;
+            }
+            .comment-count {
+                margin-left: auto;
+            }
+            /* 评论按钮在超小屏幕优化 */
+            .comment-submit {
+                width: 100%;
+                align-self: center;
+                white-space: normal;
+                padding: 0.6rem 1rem;
+            }
+        }
+
+        /* 指令风格代码高亮模拟 */
+        .message-content i, .message-content code {
+            background: #1f2d1c;
+            padding: 0.1rem 0.3rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #f2ffb0;
+        }
+    </style>
+</head>
+<body>
+<div class="message-board">
+    <div class="hero-section" data-aos="fade-down">
+        <h1>
+            <i class="fas fa-cube"></i> 
+            MC指令工坊 · 创想回廊
+            <i class="fas fa-pickaxe"></i>
+        </h1>
+        <div class="dotted-line"></div>
+    </div>
+
+    <!-- 发表留言卡片 - 按钮居中 -->
+    <div class="publish-card" data-aos="fade-up">
+        <div class="publish-title">
+            <i class="fas fa-feather-alt"></i> 
+            <span>撰写新灵感</span>
+            <i class="fas fa-terminal"></i>
+        </div>
+        <textarea id="newMessageContent" rows="4" class="message-input" placeholder="分享你的指令创意、红石设计、玩法思路...&#10;最多600字"></textarea>
+        <div class="char-counter"><span id="msgCharCount">0</span> / 600</div>
+        <div class="submit-wrapper">
+            <button id="submitMessageBtn" class="submit-btn"><i class="fas fa-paper-plane"></i> 发布指令笔记</button>
+        </div>
+    </div>
+
+    <!-- 留言列表容器 -->
+    <div id="messagesContainer" class="messages-stream">
+        <div class="empty-state">⛏️ 暂无指令分享，成为第一个创作家 ~ 发布你的MC玩法！</div>
+    </div>
+    <div class="load-more" id="loadMoreWrapper" style="display: none;">
+        <button id="loadMoreBtn" class="load-btn"><i class="fas fa-chevron-down"></i> 加载更多创想</button>
+    </div>
+    <footer>❤️ 指令创作社区 · 防重复 / 违规过滤 · 每条留言最多600字</footer>
+</div>
+<div id="toast" class="toast-msg" style="opacity:0;"></div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ duration: 500, once: true });
+    // ---------- 全局配置 ----------
+    const API_BASE = '/api/message';      // 根据后端挂载路径
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+    let messagesCache = [];
+
+    function showToast(text, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = text;
+        toast.style.background = isError ? '#5a2e2ee6' : '#1f3c22e6';
+        toast.style.borderLeftColor = isError ? '#f28b82' : '#9bdc5c';
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+    }
+
+    function formatTimeAgo(dateISO) {
+        const date = new Date(dateISO);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return '刚刚';
+        if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+        if (diff < 2592000) return `${Math.floor(diff / 86400)}天前`;
+        return `${date.getMonth()+1}/${date.getDate()}`;
+    }
+
+    async function fetchMessages(page = 1, reset = false) {
+        if (isLoading) return;
+        isLoading = true;
+        try {
+            const res = await fetch(`${API_BASE}?page=${page}&t=${Date.now()}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || '获取留言失败');
+            let newMessages = data.messages || [];
+            if (reset) {
+                messagesCache = newMessages;
+                currentPage = 1;
+                hasMore = newMessages.length === 20;
+                renderMessages(messagesCache);
+            } else {
+                if (newMessages.length === 0) hasMore = false;
+                else {
+                    messagesCache = [...messagesCache, ...newMessages];
+                    hasMore = newMessages.length === 20;
+                    renderMessages(messagesCache);
+                }
+            }
+            currentPage = page;
+            const loadWrap = document.getElementById('loadMoreWrapper');
+            if (loadWrap) loadWrap.style.display = hasMore ? 'block' : 'none';
+        } catch (err) {
+            console.error(err);
+            showToast('加载失败: ' + err.message, true);
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // 轻量转义
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function renderMessages(messages) {
+        const container = document.getElementById('messagesContainer');
+        if (!messages.length) {
+            container.innerHTML = `<div class="empty-state">🌿 目前没有指令分享，快发布你的第一个MC玩法吧！</div>`;
+            return;
+        }
+        let html = '';
+        messages.forEach(msg => {
+            const msgId = msg._id;
+            let contentEsc = escapeHtml(msg.content);
+            // 支持简单指令风格装饰
+            contentEsc = contentEsc.replace(/\/([a-zA-Z0-9_]+)/g, '<code>/$1</code>');
+            const timeAgo = formatTimeAgo(msg.createdAt);
+            const likeCount = msg.likes || 0;
+            const dislikeCount = msg.dislikes || 0;
+            const commentCount = msg.commentCount || 0;
+            const avatarLetter = msg.authorName || ((msg.uid && msg.uid.slice(-4)) || 'MCer');
+            const displayName = msg.authorName
+                ? `⚡ ${escapeHtml(msg.authorName)}`
+                : `⚡ 指令匠 · ${escapeHtml(typeof avatarLetter === 'string' && avatarLetter.length <= 4 ? avatarLetter : (msg.uid && msg.uid.slice(-4)) || 'MCer')}`;
+            html += `
+                <div class="message-item" data-message-id="${msgId}" data-aos="fade-up">
+                    <div class="message-header">
+                        <div class="user-badge">
+                            <div class="avatar-icon"><i class="fas fa-dragon"></i></div>
+                            <span class="user-name">${displayName}</span>
+                        </div>
+                        <span class="timeago"><i class="fas fa-hourglass-half"></i> ${timeAgo}</span>
+                    </div>
+                    <div class="message-content">${contentEsc || '✨ 无内容'}</div>
+                    <div class="message-footer">
+                        <button class="action-btn like" data-id="${msgId}" data-type="like">
+                            <i class="fas fa-thumbs-up"></i> <span class="like-count">${likeCount}</span>
+                        </button>
+                        <button class="action-btn dislike" data-id="${msgId}" data-type="dislike">
+                            <i class="fas fa-thumbs-down"></i> <span class="dislike-count">${dislikeCount}</span>
+                        </button>
+                        <button class="action-btn comment" data-id="${msgId}">
+                            <i class="fas fa-chevron-down"></i> 查看评论
+                        </button>
+                        <span class="comment-count"><i class="fas fa-message"></i> ${commentCount}</span>
+                    </div>
+                    <div class="comments-section" id="comments-${msgId}">
+                        <div class="comments-list" id="comments-list-${msgId}">
+                            <div class="comment-placeholder" style="color:#a6c58a;">📡 载入评论中...</div>
+                        </div>
+                        <div class="new-comment-form">
+                            <input type="text" class="comment-input" placeholder="分享你的见解 / 改进指令..." maxlength="200">
+                            <button class="comment-submit" data-id="${msgId}">发送评论</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+        // 绑定点赞/踩/评论交互
+        document.querySelectorAll('.action-btn.like').forEach(btn => {
+            btn.addEventListener('click', (e) => handleAction(btn.dataset.id, 'like', btn));
+        });
+        document.querySelectorAll('.action-btn.dislike').forEach(btn => {
+            btn.addEventListener('click', (e) => handleAction(btn.dataset.id, 'dislike', btn));
+        });
+        document.querySelectorAll('.action-btn.comment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const msgId = btn.dataset.id;
+                const commentsDiv = document.getElementById(`comments-${msgId}`);
+                if (commentsDiv) {
+                    const isShow = commentsDiv.classList.contains('show-comments');
+                    if (!isShow) {
+                        commentsDiv.classList.add('show-comments');
+                        loadCommentsForMessage(msgId);
+                        // 改变图标方向
+                        btn.querySelector('i').className = 'fas fa-chevron-up';
+                    } else {
+                        commentsDiv.classList.remove('show-comments');
+                        btn.querySelector('i').className = 'fas fa-chevron-down';
+                    }
+                }
+            });
+        });
+        document.querySelectorAll('.comment-submit').forEach(subBtn => {
+            subBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const msgId = subBtn.dataset.id;
+                const inputBox = document.querySelector(`#comments-${msgId} .comment-input`);
+                const content = inputBox.value.trim();
+                if (!content) { showToast('评论内容不能为空', true); return; }
+                if (content.length > 200) { showToast('评论最多200字', true); return; }
+                try {
+                    const res = await fetch(`${API_BASE}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messageId: msgId, content })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error || '评论失败');
+                    inputBox.value = '';
+                    showToast('💬 评论发布成功');
+                    const commentSpan = document.querySelector(`.message-item[data-message-id="${msgId}"] .comment-count`);
+                    if (commentSpan) {
+                        let cur = parseInt(commentSpan.innerText) || 0;
+                        commentSpan.innerHTML = `<i class="fas fa-message"></i> ${cur+1}`;
+                        const msgCache = messagesCache.find(m => m._id === msgId);
+                        if (msgCache) msgCache.commentCount = (msgCache.commentCount || 0) + 1;
+                    }
+                    loadCommentsForMessage(msgId);
+                } catch (err) {
+                    showToast(err.message, true);
+                }
+            });
+        });
+    }
+
+    async function loadCommentsForMessage(messageId) {
+        const commentsListDiv = document.getElementById(`comments-list-${messageId}`);
+        if (!commentsListDiv) return;
+        commentsListDiv.innerHTML = '<div style="color:#adcf8a;">⏳ 加载讨论...</div>';
+        try {
+            const res = await fetch(`${API_BASE}/comment?messageId=${messageId}&_=${Date.now()}`);
+            const data = await res.json();
+            if (!data.success) throw new Error();
+            const comments = data.comments || [];
+            if (comments.length === 0) {
+                commentsListDiv.innerHTML = '<div style="color:#b7da8c;">🌱 暂无评论，快来交流指令心得～</div>';
+                return;
+            }
+            let commentsHtml = '';
+            comments.forEach(com => {
+                const comTime = formatTimeAgo(com.createdAt);
+                const comText = escapeHtml(com.content);
+                const comAuthor = com.authorName || `工匠·${(com.uid || 'guest').slice(-4)}`;
+                commentsHtml += `
+                    <div class="comment-item">
+                        <div class="comment-meta">
+                            <span><i class="fas fa-hammer"></i> ${escapeHtml(comAuthor)}</span>
+                            <span>${comTime}</span>
+                        </div>
+                        <div class="comment-text">${comText}</div>
+                    </div>
+                `;
+            });
+            commentsListDiv.innerHTML = commentsHtml;
+        } catch (err) {
+            commentsListDiv.innerHTML = '<div style="color:#e6a17a;">⚠️ 评论加载失败，请刷新重试</div>';
+        }
+    }
+
+    async function handleAction(targetId, type, btnElement) {
+        try {
+            const res = await fetch(`${API_BASE}/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetId, type })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.error || '你已经评价过了', true);
+                return;
+            }
+            if (type === 'like') {
+                const likeSpan = btnElement.querySelector('.like-count');
+                if (likeSpan) likeSpan.innerText = parseInt(likeSpan.innerText) + 1;
+            } else {
+                const dislikeSpan = btnElement.querySelector('.dislike-count');
+                if (dislikeSpan) dislikeSpan.innerText = parseInt(dislikeSpan.innerText) + 1;
+            }
+            const msgCache = messagesCache.find(m => m._id === targetId);
+            if (msgCache) { if (type === 'like') msgCache.likes = (msgCache.likes||0)+1; else msgCache.dislikes = (msgCache.dislikes||0)+1; }
+            showToast(`✓ ${type === 'like' ? '点赞成功' : '点踩反馈成功'}`);
+        } catch (err) {
+            showToast('网络异常', true);
+        }
+    }
+
+    async function publishMessage() {
+        let content = document.getElementById('newMessageContent').value.trim();
+        if (!content) { showToast('请填写你的指令/玩法内容', true); return; }
+        if (content.length > 600) { showToast('内容不能超过600字', true); return; }
+        const btn = document.getElementById('submitMessageBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 发布中...';
+        try {
+            const res = await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || '发布失败 (重复/违规)');
+            showToast('🎉 指令笔记发布成功！');
+            document.getElementById('newMessageContent').value = '';
+            await fetchMessages(1, true);
+        } catch (err) {
+            showToast(err.message, true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布指令笔记';
+        }
+    }
+
+    function initCharCounter() {
+        const textarea = document.getElementById('newMessageContent');
+        const span = document.getElementById('msgCharCount');
+        textarea.addEventListener('input', () => {
+            let len = textarea.value.length;
+            span.innerText = len;
+            span.style.color = len > 600 ? '#f8a35e' : '#c0e0a0';
+        });
+    }
+
+    function initLoadMore() {
+        const btn = document.getElementById('loadMoreBtn');
+        if (btn) btn.addEventListener('click', () => {
+            if (!hasMore) { showToast('已经到底啦~', false); return; }
+            fetchMessages(currentPage + 1, false);
+        });
+    }
+
+    async function init() {
+        initCharCounter();
+        await fetchMessages(1, true);
+        initLoadMore();
+        document.getElementById('submitMessageBtn').addEventListener('click', publishMessage);
+        document.getElementById('newMessageContent').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') publishMessage();
+        });
+    }
+    init();
+</script>
+<script src="/js/auth.js"></script>
+<script>Auth.mountUserBar();</script>
+</body>
+</html>

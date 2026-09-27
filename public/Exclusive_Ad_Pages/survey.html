@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>问卷调查 · Survey · 武韵</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpaper_legends_the_rampage/wallpaper_minecraft_Modular_C_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 0; }
+    .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .page-header {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;
+    }
+    .page-header h1 { font-size: 1.8rem; color: #ffd966; }
+    .page-header .sub { color: #aaa; font-size: 1rem; }
+    .back-link { color: #7cb518; text-decoration: none; margin-right: auto; font-weight: 600; }
+    .back-link i { margin-right: 6px; }
+    .ad-provider-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    .provider-card {
+      background: rgba(30,40,35,0.85); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 1.5rem 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column;
+    }
+    .provider-card:hover { transform: translateY(-4px); border-color: rgba(124,181,24,0.5); }
+    .provider-icon { font-size: 2.4rem; margin-bottom: 0.5rem; }
+    .provider-name { font-size: 1.2rem; font-weight: 700; color: #a3e635; margin-bottom: 0.2rem; }
+    .provider-desc { font-size: 0.85rem; color: #bbb; margin-bottom: 0.6rem; line-height: 1.4; }
+    .provider-meta {
+      display: flex; justify-content: space-between; font-size: 0.75rem;
+      color: #888; margin: 0.5rem 0 0.8rem;
+    }
+    .provider-btn {
+      width: 100%; padding: 10px 0; border: none; border-radius: 30px;
+      background: linear-gradient(95deg, #7cb518, #5a9e0e); color: #fff;
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+      margin-top: auto; text-align: center; text-decoration: none; display: block;
+    }
+    .provider-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #3a4a3a; }
+    .provider-btn:hover:not(:disabled) { box-shadow: 0 0 12px rgba(124,181,24,0.5); }
+    .empty-hint {
+      grid-column: 1 / -1; text-align: center; padding: 3rem 0;
+      color: #666; font-size: 1.1rem;
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #ffd966; padding: 12px 28px;
+      border-radius: 40px; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      font-weight: 500; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .page-footer {
+      margin-top: 2.5rem; text-align: center; color: #555; font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;
+    }
+
+    /* 全屏灯箱弹窗样式 */
+    .ad-modal {
+      display: none; position: fixed; inset: 0; z-index: 10000; 
+      background: rgba(0,0,0,0.85); padding: 20px; align-items: center; justify-content: center;
+    }
+    .modal-content {
+      position: relative; width: 100%; max-width: 1100px; height: 85vh; 
+      background: #141423; border-radius: 16px; border: 2px solid #7cb518; 
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 0 30px rgba(124,181,24,0.2);
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 12px 20px; background: rgba(30,40,35,0.9); border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .modal-title { color: #ffd966; font-weight: bold; font-size: 1.1rem; }
+    .modal-close { background: none; border: none; color: #bbb; font-size: 1.5rem; cursor: pointer; }
+    .modal-close:hover { color: #fff; }
+    .frame-container { width: 100%; flex: 1; background: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="/points-earn.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回赚积分</a>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:2rem;">📋</span>
+        <div>
+          <h1>问卷调查 · Survey</h1>
+          <div class="sub">参与市场调研，分享你的观点</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 广告商卡片网格 -->
+    <div class="ad-provider-grid" id="providerGrid">
+      <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <div class="page-footer">
+      <i class="fas fa-shield-alt"></i> 广告内容由第三方提供，完成即可获得积分
+    </div>
+  </div>
+
+  <!-- 全屏广告加载弹窗 -->
+  <div id="adModal" class="ad-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modalTitle" class="modal-title">广告加载中...</span>
+        <button class="modal-close" onclick="closeAdModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="frameContainer" class="frame-container"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 引入全局身份验证脚本 -->
+  <script src="/js/auth.js"></script>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // 关闭广告弹窗
+    function closeAdModal() {
+      document.getElementById('adModal').style.display = 'none';
+      document.getElementById('frameContainer').innerHTML = '';
+      showToast('⏳ 正在同步您的积分数据...');
+      if (typeof Auth !== 'undefined' && Auth.refreshMe) {
+        Auth.refreshMe();
+      }
+    }
+
+    // 广告商列表：CPX-Research 保留，本地模拟问卷改为「后续扩展块」
+    const providers = [
+      { 
+        id: 'cpx_research', 
+        name: 'CPX-Research', 
+        icon: '📋',
+        desc: '全球顶级的问卷变现平台，问卷数量多、单价极高！', 
+        bonus: '10~500',
+        isExternal: true
+      },
+      { 
+        id: 'future_block',          // id 也一并更新
+        name: '后续扩展块',           // ← 新名称
+        icon: '🧩',                  // ← 新图标
+        desc: '更多问卷及任务类型即将上线，敬请期待',  // ← 新描述
+        bonus: '即将开放',            // ← 占位文案
+        isExternal: false,
+        isComingSoon: true           // 标记为即将上线
+      }
+    ];
+
+    const grid = document.getElementById('providerGrid');
+    
+    grid.innerHTML = providers.map(p => `
+      <div class="provider-card">
+        <div class="provider-icon">${p.icon}</div>
+        <div class="provider-name">${p.name}</div>
+        <div class="provider-desc">${p.desc}</div>
+        <div class="provider-meta">
+          <span><i class="fas fa-coins" style="color:#ffd966;"></i> ${p.bonus}</span>
+          <span><i class="far fa-clock"></i> ${p.isComingSoon ? '即将上线' : '即时到账'}</span>
+        </div>
+        <button class="provider-btn" data-id="${p.id}" data-external="${p.isExternal}" ${p.isComingSoon ? 'disabled' : ''}>
+          <i class="fas ${p.isComingSoon ? 'fa-hourglass-half' : 'fa-paper-plane'}"></i> 
+          ${p.isComingSoon ? '敬请期待' : '进入通道'}
+        </button>
+      </div>
+    `).join('');
+
+    // 绑定点击事件（仅对非「即将上线」的卡片生效）
+    grid.querySelectorAll('.provider-btn:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (typeof Auth !== 'undefined' && !Auth.isLoggedIn()) {
+          showToast('❌ 请先返回主页登录后再进行操作');
+          return;
+        }
+
+        const providerId = this.dataset.id;
+        const isExternal = this.dataset.external === 'true';
+        const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
+        const userId = user?.id || user?.uid || "guest";
+
+        if (isExternal && providerId === 'cpx_research') {
+          document.getElementById('modalTitle').innerHTML = `<i class="fas fa-poll"></i> CPX-Research 问卷墙`;
+          const cpxUrl = `https://offers.cpx-research.com/index.php?app_id=34162&ext_user_id=${userId}&username=${encodeURIComponent(user?.username || '')}&email=${encodeURIComponent(user?.email || '')}`;
+          document.getElementById('frameContainer').innerHTML = `
+            <iframe width="100%" height="100%" frameBorder="0" src="${cpxUrl}" style="background:#fff;"></iframe>
+          `;
+          document.getElementById('adModal').style.display = 'flex';
+        } else {
+          // 本地演示（目前只有「后续扩展块」会走这里，但它已被禁用，不会触发）
+          const name = this.closest('.provider-card').querySelector('.provider-name').textContent;
+          showToast(`✅ 完成「${name}」 (演示成功)`);
+          this.disabled = true;
+          this.innerHTML = '<i class="fas fa-check"></i> 已完成';
+          this.style.background = 'rgba(255,255,255,0.1)';
+          this.style.color = '#888';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>激励视频 · Rewarded Video · 武韵</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpaper_legends_the_rampage/wallpaper_minecraft_Modular_C_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 0; }
+    .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .page-header {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;
+    }
+    .page-header h1 { font-size: 1.8rem; color: #ffd966; }
+    .page-header .sub { color: #aaa; font-size: 1rem; }
+    .back-link { color: #7cb518; text-decoration: none; margin-right: auto; font-weight: 600; }
+    .back-link i { margin-right: 6px; }
+    .ad-provider-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    .provider-card {
+      background: rgba(30,40,35,0.85); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 1.5rem 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column;
+    }
+    .provider-card:hover { transform: translateY(-4px); border-color: rgba(124,181,24,0.5); }
+    .provider-icon { font-size: 2.4rem; margin-bottom: 0.5rem; }
+    .provider-name { font-size: 1.2rem; font-weight: 700; color: #a3e635; margin-bottom: 0.2rem; }
+    .provider-desc { font-size: 0.85rem; color: #bbb; margin-bottom: 0.6rem; line-height: 1.4; }
+    .provider-meta {
+      display: flex; justify-content: space-between; font-size: 0.75rem;
+      color: #888; margin: 0.5rem 0 0.8rem;
+    }
+    .ad-status {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin: 6px 0 10px;
+      font-size: 0.85rem;
+      color: #ccc;
+      display: none;
+      border-left: 3px solid #7cb518;
+    }
+    .ad-status.show { display: block; }
+    .ad-status .fa-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* 广告容器（iframe 包裹） */
+    .ad-iframe-container {
+      width: 100%;
+      min-height: 200px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      margin: 8px 0;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      display: none;
+    }
+    .ad-iframe-container.show {
+      display: block;
+    }
+    .ad-iframe-container iframe {
+      width: 100%;
+      height: 360px;  /* 可调整高度以适应视频 */
+      border: none;
+      background: #fff;
+      border-radius: 10px;
+    }
+
+    .provider-btn {
+      width: 100%; padding: 10px 0; border: none; border-radius: 30px;
+      background: linear-gradient(95deg, #7cb518, #5a9e0e); color: #fff;
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+      margin-top: 6px;
+    }
+    .provider-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .provider-btn:hover:not(:disabled) { box-shadow: 0 0 12px rgba(124,181,24,0.5); }
+    .provider-btn .fa-spinner { animation: spin 1s linear infinite; }
+
+    .coming-soon { opacity: 0.6; pointer-events: none; }
+    .empty-hint {
+      grid-column: 1 / -1; text-align: center; padding: 3rem 0;
+      color: #666; font-size: 1.1rem;
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #ffd966; padding: 12px 28px;
+      border-radius: 40px; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      font-weight: 500; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .page-footer {
+      margin-top: 2.5rem; text-align: center; color: #555; font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="/points-earn.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回赚积分</a>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:2rem;">🎬</span>
+        <div>
+          <h1>激励视频 · Rewarded Video</h1>
+          <div class="sub">观看完整视频广告，领取积分奖励</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-provider-grid" id="providerGrid">
+      <!-- 由 JS 动态生成 -->
+    </div>
+
+    <div class="page-footer">
+      <i class="fas fa-shield-alt"></i> 广告内容由第三方提供，完成即可获得积分
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function() {
+      // ========== DOM 引用 ==========
+      const grid = document.getElementById('providerGrid');
+      const toast = document.getElementById('toast');
+
+      // ========== 工具函数 ==========
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 3500);
+      }
+
+      function setStatus(index, html, type) {
+        const el = document.getElementById('status_' + index);
+        if (!el) return;
+        el.innerHTML = html;
+        el.className = 'ad-status show';
+        if (type === 'error') el.style.borderLeftColor = '#ef4444';
+        else if (type === 'success') el.style.borderLeftColor = '#22c55e';
+        else el.style.borderLeftColor = '#f59e0b';
+      }
+
+      function claimPoints(adName, bonus) {
+        showToast(`✅ 从「${adName}」获得 +${bonus} 积分！`);
+        // 可调用后端 API 增加积分
+      }
+
+      // ========== 广告商配置 ==========
+      const providers = [
+        {
+          id: 'rewarded_video',
+          name: '激励视频广告',
+          desc: '观看完整视频，领取高额积分奖励',
+          bonus: '25',
+          icon: '🎬',
+          type: 'rewarded'
+        },
+        {
+          id: 'future1',
+          name: '更多视频广告即将上线',
+          desc: '后续接入更多优质激励视频渠道',
+          bonus: '敬请期待',
+          icon: '📺',
+          isFuture: true
+        },
+        {
+          id: 'future2',
+          name: '更多积分渠道',
+          desc: '更多广告形式即将开放',
+          bonus: '敬请期待',
+          icon: '🔮',
+          isFuture: true
+        }
+      ];
+
+      // ========== 渲染卡片 ==========
+      grid.innerHTML = providers.map((p, index) => {
+        if (p.isFuture) {
+          return `
+            <div class="provider-card coming-soon">
+              <div class="provider-icon">${p.icon}</div>
+              <div class="provider-name">${p.name}</div>
+              <div class="provider-desc">${p.desc}</div>
+              <div class="provider-meta">
+                <span><i class="fas fa-coins" style="color:#ffd966;"></i> +${p.bonus}</span>
+                <span><i class="far fa-clock"></i> 即将开放</span>
+              </div>
+              <button class="provider-btn" disabled>
+                <i class="fas fa-hourglass-half"></i> 敬请期待
+              </button>
+            </div>
+          `;
+        }
+        return `
+          <div class="provider-card">
+            <div class="provider-icon">${p.icon}</div>
+            <div class="provider-name">${p.name}</div>
+            <div class="provider-desc">${p.desc}</div>
+            <div class="provider-meta">
+              <span><i class="fas fa-coins" style="color:#ffd966;"></i> +${p.bonus}</span>
+              <span><i class="far fa-clock"></i> 观看后领取</span>
+            </div>
+            <div class="ad-status" id="status_${index}"></div>
+            <!-- 广告容器（iframe） -->
+            <div class="ad-iframe-container" id="adContainer_${index}"></div>
+            <button class="provider-btn" data-index="${index}">
+              <i class="fas fa-play-circle"></i> 观看视频广告
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // ========== 加载广告（通过 iframe 隔离） ==========
+      function loadRewardedAd(container) {
+        return new Promise((resolve, reject) => {
+          try {
+            // 清空容器
+            container.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.allow = 'autoplay; encrypted-media';
+            iframe.style.width = '100%';
+            iframe.style.height = '360px';
+            iframe.style.border = 'none';
+            iframe.style.background = '#fff';
+            iframe.style.borderRadius = '10px';
+
+            // 构建 iframe 内容，包含广告脚本
+            const iframeContent = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>激励视频</title>
+                <style>
+                  body { margin: 0; padding: 0; background: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
+                  #ad-container { width: 100%; min-height: 100px; }
+                </style>
+              </head>
+              <body>
+                <div id="ad-container"></div>
+                <script>
+                  // 你提供的激励视频广告脚本
+                  (function(zyc){
+                    var d = document,
+                        s = d.createElement('script'),
+                        l = d.scripts[d.scripts.length - 1];
+                    s.settings = zyc || {};
+                    s.src = "//conventionalresponse.com/bOX/Vas.dVGsl/0oYRWZc_/geDmB9/uYZzUGl/klP/TAcVyVM_TyYO0xNcDUkbt/NYzeIfx/NXjgQX1IMtwL";
+                    s.async = true;
+                    s.referrerPolicy = 'no-referrer-when-downgrade';
+                    l.parentNode.insertBefore(s, l);
+                  })({});
+                <\/script>
+              </body>
+              </html>
+            `;
+
+            iframe.srcdoc = iframeContent;
+            container.appendChild(iframe);
+            container.classList.add('show');
+
+            // 监听加载完成
+            iframe.onload = function() {
+              resolve(true);
+            };
+            // 超时保护
+            const timer = setTimeout(() => {
+              reject(new Error('广告加载超时'));
+            }, 10000);
+            iframe.onload = function() {
+              clearTimeout(timer);
+              resolve(true);
+            };
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+
+      // ========== 绑定按钮事件 ==========
+      grid.querySelectorAll('.provider-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (this.disabled) return;
+
+          const index = parseInt(this.dataset.index);
+          const provider = providers[index];
+          if (!provider || provider.isFuture) return;
+
+          const container = document.getElementById('adContainer_' + index);
+
+          // 如果已加载，则直接领取积分
+          if (this.dataset.loaded === 'true') {
+            if (this.dataset.step !== 'claimed') {
+              claimPoints(provider.name, provider.bonus);
+              this.disabled = true;
+              this.innerHTML = '<i class="fas fa-check"></i> 已领取';
+              this.dataset.step = 'claimed';
+              setStatus(index, `🎉 积分已到账！`, 'success');
+            }
+            return;
+          }
+
+          // 首次加载
+          this.disabled = true;
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
+          setStatus(index, '<i class="fas fa-spinner fa-spin"></i> 正在加载广告...', 'info');
+
+          loadRewardedAd(container)
+            .then(() => {
+              setStatus(index, `✅ 广告已加载！请观看完整视频，完成后点击「领取积分」`, 'success');
+              showToast('✅ 激励视频已加载');
+              this.disabled = false;
+              this.innerHTML = '<i class="fas fa-check-circle"></i> 领取积分';
+              this.dataset.loaded = 'true';
+              this.dataset.step = 'ready';
+              // 重新绑定点击事件：领取积分
+              this.onclick = function(e2) {
+                e2.preventDefault();
+                if (this.disabled) return;
+                if (this.dataset.step === 'claimed') return;
+                claimPoints(provider.name, provider.bonus);
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-check"></i> 已领取';
+                this.dataset.step = 'claimed';
+                setStatus(index, `🎉 积分已到账！`, 'success');
+              };
+            })
+            .catch(err => {
+              console.warn('加载失败:', err);
+              setStatus(index, `❌ 加载失败：${err.message}，请刷新重试`, 'error');
+              showToast('❌ 广告加载失败，请刷新重试');
+              this.disabled = false;
+              this.innerHTML = '<i class="fas fa-redo"></i> 重试';
+            });
+        });
+      });
+
+      // ========== 页面加载后引导 ==========
+      setTimeout(() => {
+        showToast('💡 点击「观看视频广告」加载激励视频');
+      }, 600);
+    })();
+  </script>
+</body>
+</html>

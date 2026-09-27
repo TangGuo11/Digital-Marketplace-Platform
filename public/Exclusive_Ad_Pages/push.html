@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>推送通知 · Push · 武韵</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpaper_legends_the_rampage/wallpaper_minecraft_Modular_C_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 0; }
+    .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .page-header {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;
+    }
+    .page-header h1 { font-size: 1.8rem; color: #ffd966; }
+    .page-header .sub { color: #aaa; font-size: 1rem; }
+    .back-link { color: #7cb518; text-decoration: none; margin-right: auto; font-weight: 600; }
+    .back-link i { margin-right: 6px; }
+    .ad-provider-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    .provider-card {
+      background: rgba(30,40,35,0.85); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 1.5rem 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column;
+    }
+    .provider-card:hover { transform: translateY(-4px); border-color: rgba(124,181,24,0.5); }
+    .provider-icon { font-size: 2.4rem; margin-bottom: 0.5rem; }
+    .provider-name { font-size: 1.2rem; font-weight: 700; color: #a3e635; margin-bottom: 0.2rem; }
+    .provider-desc { font-size: 0.85rem; color: #bbb; margin-bottom: 0.6rem; line-height: 1.4; }
+    .provider-meta {
+      display: flex; justify-content: space-between; font-size: 0.75rem;
+      color: #888; margin: 0.5rem 0 0.8rem;
+    }
+    .provider-btn {
+      width: 100%; padding: 10px 0; border: none; border-radius: 30px;
+      background: linear-gradient(95deg, #7cb518, #5a9e0e); color: #fff;
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+      margin-top: auto;
+    }
+    .provider-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .provider-btn:hover:not(:disabled) { box-shadow: 0 0 12px rgba(124,181,24,0.5); }
+    .provider-btn .fa-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .coming-soon { opacity: 0.6; pointer-events: none; }
+    .empty-hint {
+      grid-column: 1 / -1; text-align: center; padding: 3rem 0;
+      color: #666; font-size: 1.1rem;
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #ffd966; padding: 12px 28px;
+      border-radius: 40px; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      font-weight: 500; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .page-footer {
+      margin-top: 2.5rem; text-align: center; color: #555; font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="/points-earn.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回赚积分</a>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:2rem;">🔔</span>
+        <div>
+          <h1>推送通知 · Push</h1>
+          <div class="sub">广告接入中，即将开放</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad-provider-grid" id="providerGrid">
+      <!-- 广告商卡片预留位置，由 JS 动态生成或手动写入 -->
+    </div>
+
+    <div class="page-footer">
+      <i class="fas fa-shield-alt"></i> 广告内容由第三方提供，完成即可获得积分
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function() {
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+      }
+
+      // ========== 此处预留广告接入入口 ==========
+      // 后续可在此处添加新的广告代码或配置
+
+      // 页面加载后的提示
+      setTimeout(() => {
+        showToast('💡 广告接入中，请稍后...');
+      }, 500);
+    })();
+  </script>
+</body>
+</html>

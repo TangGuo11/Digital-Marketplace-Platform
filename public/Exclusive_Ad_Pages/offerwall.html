@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>任务墙 · TimeWall · 武韵</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 5rem 1rem 3rem;
+            background: #1a1a2e url('/scb/wallpaper_legends_the_rampage/wallpaper_minecraft_Modular_C_1920x1080.png') center/cover fixed;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #eee;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== 顶部导航 ===== */
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            color: #ffd966;
+        }
+
+        .page-header .sub {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .back-link {
+            color: #7cb518;
+            text-decoration: none;
+            margin-right: auto;
+            font-weight: 600;
+        }
+
+        .back-link i {
+            margin-right: 6px;
+        }
+
+        /* ===== 广告商卡片网格 ===== */
+        .ad-provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .provider-card {
+            background: rgba(30, 40, 35, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            transition: transform 0.2s, border-color 0.2s;
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 181, 24, 0.5);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .provider-icon {
+            font-size: 4rem;
+            margin-bottom: 0.8rem;
+            background: rgba(124, 181, 24, 0.15);
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #ffd966;
+            box-shadow: 0 0 0 2px rgba(255, 217, 102, 0.2);
+            transition: 0.3s;
+        }
+
+        .provider-card:hover .provider-icon {
+            box-shadow: 0 0 0 4px rgba(255, 217, 102, 0.4);
+            transform: scale(1.02);
+        }
+
+        .provider-icon i {
+            font-size: 3.8rem;
+            color: #f5b342;
+            filter: drop-shadow(0 0 6px rgba(255, 200, 50, 0.3));
+        }
+
+        .provider-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #a3e635;
+            margin-bottom: 0.3rem;
+        }
+
+        .provider-desc {
+            font-size: 0.9rem;
+            color: #bbb;
+            margin-bottom: 0.6rem;
+            line-height: 1.5;
+        }
+
+        .provider-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 0.8rem;
+            color: #888;
+            margin: 0.8rem 0 1.2rem;
+        }
+
+        .provider-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .provider-btn {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(95deg, #7cb518, #5a9e0e);
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .provider-btn:hover {
+            box-shadow: 0 0 20px rgba(124, 181, 24, 0.4);
+            transform: scale(1.02);
+        }
+
+        /* ===== Toast 提示 ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffd966;
+            padding: 12px 28px;
+            border-radius: 40px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 9999;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ===== 底部 ===== */
+        .page-footer {
+            margin-top: 2.5rem;
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.5rem;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.8rem;
+            }
+
+            .back-link {
+                margin-right: 0;
+            }
+
+            .ad-provider-grid {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
+
+            .provider-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .provider-icon i {
+                font-size: 3rem;
+            }
+
+            .provider-name {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 4rem 0.5rem 2rem;
+            }
+
+            .provider-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .provider-meta {
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ===== 顶部导航 ===== (移除了积分显示) -->
+        <div class="page-header">
+            <a href="/points-earn.html" class="back-link"><i class="fas fa-arrow-left"></i> 返回赚积分</a>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-size:2rem;">🎯</span>
+                <div>
+                    <h1>任务墙 · TimeWall</h1>
+                    <div class="sub">完成任务赚取积分奖励</div>
+                </div>
+            </div>
+            <!-- 右上角 🪙45496 已移除 -->
+        </div>
+
+        <!-- ===== TimeWall 卡片 ===== -->
+        <div class="ad-provider-grid">
+            <div class="provider-card">
+                <div class="provider-icon">
+                    <i class="fas fa-crown"></i> <!-- 更精致的图标 -->
+                </div>
+                <div class="provider-name">TimeWall</div>
+                <div class="provider-desc">
+                    全球领先的任务墙平台<br/>
+                    完成问卷、点击、游戏等多种任务赚取积分
+                </div>
+                <div class="provider-meta">
+                    <span><i class="fas fa-coins" style="color:#ffd966;"></i> 5~2000 积分</span>
+                    <span><i class="fas fa-bolt" style="color:#7cb518;"></i> 即时到账</span>
+                </div>
+                <!-- 改为直接跳转链接，不再使用弹窗框 -->
+                <a href="#" class="provider-btn" id="openTimeWallBtn">
+                    <i class="fas fa-paper-plane"></i> 进入任务墙
+                </a>
+            </div>
+        </div>
+
+        <!-- ===== 底部 ===== -->
+        <div class="page-footer">
+            <i class="fas fa-shield-alt"></i> 广告内容由 TimeWall 提供，完成即可获得积分
+        </div>
+    </div>
+
+    <!-- ===== Toast 提示 ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================ -->
+    <!--  引入全局身份验证脚本 (对齐 CPX 的鉴权基石)                  -->
+    <!-- ============================================================ -->
+    <script src="/js/auth.js"></script>
+
+    <script>
+        // ============================================================
+        //  TimeWall 配置
+        // ============================================================
+        const TIMEWALL_CONFIG = {
+            // 从 TimeWall 后台获取的 Placement OID
+            OID: '2f7935d6ba1158f6', 
+        };
+
+        // ============================================================
+        //  Toast 提示
+        // ============================================================
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        // ============================================================
+        //  加载用户积分 (仅用于刷新显示，但右上角已移除)
+        // ============================================================
+        async function loadPoints() {
+            try {
+                const res = await fetch('/api/points/balance', {
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                // 右上角已移除，仅做内部状态更新（若有需要可保留）
+                console.log('✅ 积分已更新:', data.points || 0);
+            } catch (err) {
+                console.error('加载积分失败:', err);
+            }
+        }
+
+        // ============================================================
+        //  直接跳转 TimeWall (不再使用框框弹窗)
+        // ============================================================
+        function openTimeWallDirect() {
+            // 1. 检查登录状态
+            if (typeof Auth !== 'undefined' && !Auth.isLoggedIn()) {
+                showToast('❌ 请先返回主页登录后再进行操作');
+                return;
+            }
+
+            // 2. 获取用户ID
+            const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
+            const userId = user?.id || user?.uid || user?._id;
+            
+            if (!userId) {
+                showToast('❌ 无法获取用户信息，请刷新重试');
+                return;
+            }
+
+            // 3. 构建 TimeWall URL 并直接跳转 (新标签页打开，保留当前页)
+            const timewallUrl = `https://timewall.io/users/login?oid=${TIMEWALL_CONFIG.OID}&uid=${userId}`;
+            
+            // 直接跳转：使用 window.open 新开窗口，或 location.href 当前窗口跳转
+            // 根据需求，这里使用 _blank 新开窗口，体验更好 (类似点击广告)
+            window.open(timewallUrl, '_blank');
+            
+            showToast('🚀 正在前往任务墙 ... 完成即可获得积分');
+        }
+
+        // ============================================================
+        //  绑定事件初始化
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载积分（静默）
+            loadPoints();
+
+            // 绑定 TimeWall 点击 —— 直接跳转
+            document.getElementById('openTimeWallBtn').addEventListener('click', function(e) {
+                e.preventDefault();   // 阻止默认 a 行为
+                openTimeWallDirect();
+            });
+
+            // 每 60 秒定时更新积分（后台静默）
+            setInterval(loadPoints, 60000);
+
+            // 用户重新聚焦页面时，动态刷新积分
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    loadPoints();
+                }
+            });
+
+            console.log('✅ TimeWall 任务墙 (直跳版) 加载成功');
+        });
+    </script>
+
+</body>
+</html>

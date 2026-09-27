@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赚积分 · 武韵|指令</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpapers_dungeons_pets_flair/wallpaper_dungeons_pets_flair_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 0; }
+    .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+    h1 { text-align: center; color: #ffd966; font-size: 2rem; margin-bottom: 0.5rem; }
+    .hero-desc { text-align: center; color: #bbb; margin-bottom: 2rem; }
+    .balance-card {
+      background: linear-gradient(135deg, rgba(124,181,24,0.25), rgba(90,158,14,0.15));
+      border: 2px solid rgba(124,181,24,0.5); border-radius: 20px;
+      padding: 1.5rem; text-align: center; margin-bottom: 2rem;
+    }
+    .balance-num { font-size: 2.5rem; font-weight: 800; color: #ffd966; }
+    .balance-label { color: #aaa; margin-top: 4px; }
+    .login-hint {
+      background: rgba(255,200,50,0.15); border: 1px solid rgba(255,200,50,0.4);
+      border-radius: 14px; padding: 1rem; text-align: center; margin-bottom: 2rem;
+    }
+    .login-hint a { color: #ffd966; font-weight: 600; }
+    .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .ad-card {
+      background: rgba(30,40,35,0.85); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 1.2rem; transition: transform 0.2s;
+    }
+    .ad-card:hover { transform: translateY(-3px); border-color: rgba(124,181,24,0.4); }
+    .ad-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .ad-name { font-size: 1.1rem; font-weight: 700; color: #a3e635; margin-bottom: 0.3rem; }
+    .ad-desc { font-size: 0.85rem; color: #aaa; margin-bottom: 0.8rem; line-height: 1.4; }
+    .ad-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-bottom: 0.8rem; }
+    .ad-btn {
+      width: 100%; padding: 10px; border: none; border-radius: 10px;
+      background: linear-gradient(95deg, #7cb518, #5a9e0e); color: #fff;
+      font-weight: 600; cursor: pointer;
+    }
+    .ad-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ad-btn.done { background: rgba(255,255,255,0.1); color: #888; }
+    .back-link { display: block; text-align: center; margin-top: 2rem; color: #aaa; text-decoration: none; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #ffd966; padding: 12px 24px;
+      border-radius: 30px; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+    }
+    .toast.show { opacity: 1; }
+    .redeem-link {
+      display: block; text-align: center; margin-top: 1rem;
+      color: #7cb518; font-weight: 600; text-decoration: none;
+    }
+    .api-info {
+      margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.4);
+      border-radius: 12px; font-size: 0.9rem; color: #ccc; line-height: 1.8;
+      text-align: center; /* 居中 */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-coins"></i> 赚积分</h1>
+    <p class="hero-desc">完成广告任务获取积分，积分可在作品商店兑换指令作品</p>
+
+    <div id="loginHint" class="login-hint" style="display:none">
+      请先 <a href="/login.html?redirect=/points-earn.html">登录</a> 后再领取积分
+    </div>
+
+    <div class="balance-card" id="balanceCard" style="display:none">
+      <div class="balance-num" id="balanceNum">0</div>
+      <div class="balance-label">当前积分</div>
+      <a href="/minecraft-shop.html" class="redeem-link"><i class="fas fa-store"></i> 去商店兑换作品</a>
+    </div>
+
+    <div class="ad-grid" id="adGrid"></div>
+
+    <!-- ====== 反馈区域：居中，无超链接 ====== -->
+    <div class="api-info">
+      <strong>有积分问题请反馈：</strong> 留言板 / QQ群主
+    </div>
+
+    <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/js/auth.js"></script>
+  <script>
+    Auth.mountUserBar()
+
+    const ICONS = {
+      offerwall: "🎯", survey: "📋", rewarded_video: "🎬",
+      popunder: "📲", push: "🔔", banner: "📢"
+    }
+
+    function showToast(text) {
+      const t = document.getElementById("toast")
+      t.textContent = text
+      t.classList.add("show")
+      setTimeout(() => t.classList.remove("show"), 2500)
+    }
+
+    // ============================================================
+    // 跳转映射：根据项目结构更新路径
+    // public/points-earn.html  →  Exclusive_Ad_Pages/*.html
+    // ============================================================
+    function navigateToAdPage(adType) {
+      const pageMap = {
+        offerwall: '../Exclusive_Ad_Pages/offerwall.html',
+        survey: '../Exclusive_Ad_Pages/survey.html',
+        rewarded_video: '../Exclusive_Ad_Pages/rewarded-video.html',
+        popunder: '../Exclusive_Ad_Pages/popunder.html',
+        push: '../Exclusive_Ad_Pages/push.html',
+        banner: '../Exclusive_Ad_Pages/banner.html'
+      };
+      const url = pageMap[adType];
+      if (url) {
+        window.location.href = url + '?from=points-earn';
+      } else {
+        showToast('未知广告类型');
+      }
+    }
+
+    async function loadPage() {
+      const loggedIn = Auth.isLoggedIn()
+      document.getElementById("loginHint").style.display = loggedIn ? "none" : "block"
+      document.getElementById("balanceCard").style.display = loggedIn ? "block" : "none"
+
+      let stats = {}
+      if (loggedIn) {
+        const user = Auth.getUser()
+        document.getElementById("balanceNum").textContent = user?.points || 0
+        const statsData = await Auth.api("/api/points/today-stats")
+        if (statsData.success) stats = statsData.stats
+      }
+
+      const typesData = await fetch("/api/points/ad-types").then(r => r.json())
+      const types = typesData.data || []
+      const grid = document.getElementById("adGrid")
+
+      grid.innerHTML = types.map(t => {
+        const st = stats[t.key] || { remaining: t.dailyLimit, limit: t.dailyLimit }
+        const exhausted = loggedIn && st.remaining <= 0
+        return `
+          <div class="ad-card">
+            <div class="ad-icon">${ICONS[t.key] || "⭐"}</div>
+            <div class="ad-name">${t.name}</div>
+            <div class="ad-desc">${t.description}</div>
+            <div class="ad-meta">
+              <span>奖励 +${t.defaultPoints} 积分</span>
+              <span>今日 ${loggedIn ? st.remaining : t.dailyLimit}/${t.dailyLimit}</span>
+            </div>
+            <button class="ad-btn ${exhausted ? "done" : ""}" data-type="${t.key}"
+              ${!loggedIn || exhausted ? "disabled" : ""}>
+              ${!loggedIn ? "需登录" : exhausted ? "今日已满" : "领取积分 →"}
+            </button>
+          </div>`
+      }).join("")
+
+      grid.querySelectorAll(".ad-btn:not(:disabled)").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const adType = btn.dataset.type;
+          navigateToAdPage(adType);
+        });
+      });
+    }
+
+    loadPage()
+    window.addEventListener("authchange", loadPage)
+  </script>
+</body>
+</html>

@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>我的世界 · 武韵商店</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Helvetica', 'Courier New', monospace, system-ui;
+        }
+
+        body {
+            background: linear-gradient(135deg, rgba(10, 30, 45, 0.85), rgba(5, 20, 30, 0.9));
+            background-image: url('/scb/wallpapers_minecraft_ocean_monument_/wallpaper_minecraft_ocean_monument_1080x1920.webp');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 30, 45, 0.2), rgba(5, 25, 35, 0.3));
+            backdrop-filter: brightness(0.98) blur(1px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .shop-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(12px, 2.5vw, 32px);
+            margin-bottom: 2rem;
+            border-bottom: 3px solid rgba(93, 155, 122, 0.6);
+            padding-bottom: 0.75rem;
+            width: 100%;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .title-wrapper::before,
+        .title-wrapper::after {
+            content: "⚓";
+            font-size: 1.5rem;
+            opacity: 0.4;
+            position: absolute;
+            bottom: -15px;
+        }
+        .title-wrapper::before { left: 20px; }
+        .title-wrapper::after { right: 20px; }
+
+        .title-icon {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+            filter: drop-shadow(2px 2px 8px rgba(0,0,0,0.5));
+            border-radius: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .title-icon:hover {
+            transform: scale(1.05) rotate(3deg);
+        }
+
+        .shop-title {
+            font-family: 'Courier New', 'Minecraft', monospace;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 3.2rem;
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #b8e6d8, #6fc3b0, #4aa68f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 4px 4px 0 rgba(26, 74, 62, 0.5), 6px 6px 12px rgba(0,0,0,0.3);
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 1;
+            line-height: 1.2;
+        }
+
+        @media (min-width: 1600px) {
+            .shop-title { font-size: 3.8rem; letter-spacing: 8px; }
+            .title-icon { width: 130px; height: 130px; }
+        }
+        @media (max-width: 900px) {
+            .shop-title { font-size: 2.5rem; letter-spacing: 4px; }
+            .title-icon { width: 85px; height: 85px; }
+            .title-wrapper { gap: 12px; }
+        }
+        @media (max-width: 700px) {
+            .title-icon { width: 70px; height: 70px; }
+            .shop-title { font-size: 1.9rem; letter-spacing: 3px; }
+            .title-wrapper { gap: 10px; }
+        }
+        @media (max-width: 550px) {
+            .title-icon { width: 55px; height: 55px; }
+            .shop-title { font-size: 1.5rem; letter-spacing: 2px; }
+            .title-wrapper { gap: 8px; }
+        }
+        @media (max-width: 420px) {
+            .shop-title { font-size: 1.2rem; letter-spacing: 1px; }
+            .title-icon { width: 45px; height: 45px; }
+            .title-wrapper { gap: 6px; }
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem 1.5rem;
+            margin-top: 1rem;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .product-card {
+            background: rgba(30, 55, 45, 0.35);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(100, 160, 120, 0.5);
+            border-radius: 28px;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+            padding: 1rem 1rem 1.2rem;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .product-card::before {
+            content: "🐟";
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 2rem;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            background: rgba(40, 75, 60, 0.5);
+            border-color: rgba(127, 170, 90, 0.8);
+            box-shadow: 0 18px 30px rgba(0,0,0,0.4);
+        }
+
+        .media-carousel {
+            background: rgba(20, 45, 35, 0.6);
+            backdrop-filter: blur(4px);
+            border: 2px solid rgba(100, 150, 90, 0.6);
+            border-radius: 20px;
+            padding: 6px;
+            box-shadow: inset 0 0 0 1px rgba(180, 220, 150, 0.3), 0 4px 12px rgba(0,0,0,0.2);
+            margin-bottom: 1.2rem;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .carousel-viewport {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(30, 70, 55, 0.7), rgba(20, 50, 40, 0.8));
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(130, 200, 110, 0.5);
+        }
+
+        .carousel-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .carousel-slide {
+            flex: 0 0 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            background-color: rgba(45, 90, 70, 0.8);
+            overflow: hidden;
+        }
+
+        /* 简化的播放按钮 - 只有小三角形 */
+        .carousel-slide.video::after {
+            content: "▶";
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 8px rgba(0,0,0,0.5);
+            z-index: 2;
+            pointer-events: none;
+            transition: transform 0.2s;
+        }
+
+        .carousel-slide.video:hover::after {
+            transform: scale(1.1);
+            color: #ffd966;
+        }
+
+        .carousel-slide.empty {
+            background: rgba(70, 120, 100, 0.6);
+            font-size: 1.6rem;
+            color: #d8f0e5;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 50px;
+            background: rgba(30, 70, 55, 0.85);
+            border: 1px solid #b8d98a;
+            color: #ffefb0;
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+            z-index: 10;
+            opacity: 0.85;
+        }
+
+        .carousel-arrow:hover {
+            background: #4f8a70;
+            transform: translateY(-50%) scale(1.05);
+            color: white;
+        }
+
+        .carousel-arrow:active {
+            transform: translateY(-50%) scale(0.98);
+        }
+
+        .carousel-arrow.left { left: 8px; }
+        .carousel-arrow.right { right: 8px; }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 4px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(80, 120, 100, 0.8);
+            border: 1px solid #cfe6b0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dot.active {
+            background: #ffd966;
+            border-color: #fff2b5;
+            transform: scale(1.3);
+            box-shadow: 0 0 8px #ffd966;
+        }
+
+        .info-area {
+            background: rgba(30, 45, 35, 0.7);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(100, 150, 90, 0.5);
+            border-radius: 18px;
+            padding: 0.9rem 0.8rem;
+            box-shadow: inset 0 0 0 1px rgba(210, 230, 170, 0.2);
+            margin-bottom: 1rem;
+            min-height: 170px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5e6b3, #ffdd99, #ffe0aa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            word-break: break-word;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            margin-bottom: 0.8rem;
+            border-bottom: 1px dashed rgba(155, 200, 120, 0.6);
+            padding-bottom: 0.4rem;
+        }
+
+        .product-description {
+            font-size: 0.9rem;
+            color: #efe6cf;
+            background: rgba(20, 35, 28, 0.6);
+            padding: 0.7rem;
+            border-radius: 14px;
+            border: 1px solid rgba(150, 180, 110, 0.4);
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
+            word-break: break-word;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        .bili-button {
+            background: linear-gradient(135deg, #1e6f8f, #0d4f6f);
+            border: 1px solid #7fc0e0;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 3px 0 #0a3a52;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bili-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #0a3a52;
+        }
+
+        .bili-button.disabled {
+            background: linear-gradient(135deg, #6f8f8f, #5a7a7a);
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .buy-button {
+            background: linear-gradient(135deg, #3f8e70, #2a6e52);
+            border: 1px solid #9ad88a;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 0 #1c523e;
+            cursor: pointer;
+            transition: all 0.1s linear;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .buy-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #1c523e;
+        }
+
+        .price-on-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffdd99;
+        }
+
+        .price-on-button::before {
+            content: "💎";
+            font-size: 1.2rem;
+            margin-right: 4px;
+        }
+
+        .pay-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 35, 40, 0.85);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pay-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 380px;
+            background: linear-gradient(145deg, #eef4e8, #e0e8d8);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 3px #6aa67e inset;
+            overflow: hidden;
+            animation: modalSlideUp 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.92) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+        }
+
+        .pay-modal-body {
+            padding: 28px 24px 20px 24px;
+        }
+
+        .pay-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pay-option-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 12px;
+            border: none;
+            border-radius: 60px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            width: 100%;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .pay-option-btn.alipay {
+            background: linear-gradient(135deg, #1677ff 0%, #0a5fcf 100%);
+            color: white;
+        }
+
+        .pay-option-btn.wxpay {
+            background: linear-gradient(135deg, #07c160 0%, #05a850 100%);
+            color: white;
+        }
+
+        .pay-option-btn.points-redeem {
+            background: linear-gradient(135deg, #c9a020 0%, #8b6914 100%);
+            color: white;
+        }
+
+        .button-group .points-button {
+            background: linear-gradient(95deg, #c9a020, #8b6914);
+            border: none; padding: 0.5rem 0.8rem; border-radius: 16px;
+            color: #fff; font-weight: 700; cursor: pointer; font-size: 1rem;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-width: 80px; gap: 2px;
+        }
+        .points-on-button { font-size: 0.85rem; color: #ffd966; }
+
+        .pay-option-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .pay-option-btn:active {
+            transform: translateY(1px);
+        }
+
+        .payment-status {
+            text-align: center;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 60px;
+        }
+
+        .payment-status.loading {
+            background: rgba(22, 119, 255, 0.15);
+            color: #0a5fcf;
+            animation: pulse 1.2s infinite;
+        }
+
+        .payment-status.success {
+            background: rgba(7, 193, 96, 0.15);
+            color: #05a850;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .pay-modal-close-bottom {
+            display: flex;
+            justify-content: center;
+            padding: 0 6px 20px 6px;
+        }
+        
+        .pay-modal-close {
+            width: 40px;
+            height: 40px;
+            background: rgba(70, 100, 80, 0.2);
+            backdrop-filter: blur(4px);
+            border: 2px solid #6a9e6e;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+        }
+
+        .pay-modal-close:hover {
+            background: rgba(100, 140, 100, 0.4);
+            transform: rotate(90deg);
+            border-color: #ffd966;
+        }
+
+        .pay-modal-close::before {
+            content: "✕";
+            font-size: 20px;
+            font-weight: 400;
+            color: #4a6e4a;
+        }
+
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 25, 20, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        .fullscreen-content {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .fullscreen-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+            cursor: grab;
+        }
+
+        .fullscreen-track:active {
+            cursor: grabbing;
+        }
+
+        .fullscreen-slide {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0a1a12;
+            position: relative;
+        }
+
+        .fullscreen-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .fullscreen-slide video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .video-thumbnail::after {
+            content: "▶";
+            position: absolute;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* 全屏退出按钮 - ⇠ 符号，调大尺寸，淡蓝色 */
+        .fullscreen-close {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-size: 3rem;
+            color: #7bc5e8;
+            cursor: pointer;
+            z-index: 10000;
+            width: auto;
+            height: auto;
+            background: none;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            transition: all 0.2s;
+            font-weight: 400;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .fullscreen-close:hover {
+            color: #a8e0ff;
+            transform: scale(1.1);
+        }
+
+        .fullscreen-close.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-placeholder, .error-toast, .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.4rem;
+            color: #c8e6d5;
+            background: rgba(30, 60, 50, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+        }
+        .error-toast {
+            background: rgba(100, 40, 30, 0.7);
+        }
+
+        .shop-infinite-footer {
+            min-height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 0 2rem;
+            color: #9bc4b0;
+            font-size: 0.95rem;
+        }
+
+        .shop-sentinel {
+            width: 100%;
+            height: 4px;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .shop-load-status.is-visible { display: block; }
+        .shop-load-status { display: none; margin-top: 0.5rem; }
+        
+        @media (max-width: 768px) {
+            body { padding: 1rem 0.8rem; }
+            .shop-container { padding: 1rem 0.8rem; }
+            .products-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .product-card { margin: 0; width: 100%; }
+            .product-title { font-size: 1.4rem; }
+            .buy-button { font-size: 1.2rem; padding: 0.5rem 0.8rem; }
+            .price-on-button { font-size: 1.2rem; }
+            .points-button {
+                background: linear-gradient(95deg, #c9a020, #8b6914);
+                border: none; padding: 0.5rem 0.8rem; border-radius: 16px;
+                color: #fff; font-weight: 700; cursor: pointer; font-size: 1rem;
+                display: flex; flex-direction: column; align-items: center; gap: 2px;
+            }
+            .points-on-button { font-size: 0.85rem; color: #ffd966; }
+            .fullscreen-close { font-size: 2.5rem; top: 18px; left: 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="shop-container">
+    <div class="title-wrapper">
+        <img src="/scb/1.png" alt="海洋装饰" class="title-icon" onerror="this.style.opacity='0.5'; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20110%20110%22%3E%3Crect%20width%3D%22110%22%20height%3D%22110%22%20fill%3D%22%232a6a55%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffdd99%22%20font-size%3D%2240%22%3E🐟%3C%2Ftext%3E%3C%2Fsvg%3E'">
+        <span class="shop-title">我的世界 · 武韵商店</span>
+        <img src="/scb/1.png" alt="海洋装饰" class="title-icon" onerror="this.style.opacity='0.5'; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20110%20110%22%3E%3Crect%20width%3D%22110%22%20height%3D%22110%22%20fill%3D%22%232a6a55%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffdd99%22%20font-size%3D%2240%22%3E🐟%3C%2Ftext%3E%3C%2Fsvg%3E'">
+    </div>
+    <div id="productsGrid" class="products-grid">
+        <div class="loading-placeholder">🌊 深海加载中，发现宝藏...</div>
+    </div>
+    <div class="shop-infinite-footer">
+        <div id="shopScrollSentinel" class="shop-sentinel" aria-hidden="true"></div>
+        <p id="shopLoadStatus" class="shop-load-status">加载更多…</p>
+        <p id="shopEndHint" class="shop-load-status" style="color:#6a9a82;">已经到底啦</p>
+    </div>
+</div>
+
+<div id="payChoice" class="pay-modal">
+    <div class="pay-modal-content">
+        <div class="pay-modal-body">
+            <div id="payButtons" class="pay-options"></div>
+            <div id="paymentStatusMsg" class="payment-status" style="display: none;"></div>
+        </div>
+        <div class="pay-modal-close-bottom">
+            <button class="pay-modal-close" id="closePayModalBtn" aria-label="关闭"></button>
+        </div>
+    </div>
+</div>
+
+<div id="fullscreenModal" class="fullscreen-modal">
+    <div class="fullscreen-content">
+        <div class="fullscreen-close" id="fullscreenClose">⇠</div>
+        <div class="fullscreen-track" id="fullscreenTrack"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const grid = document.getElementById('productsGrid');
+        const modal = document.getElementById('fullscreenModal');
+        const fullscreenTrack = document.getElementById('fullscreenTrack');
+        const fullscreenClose = document.getElementById('fullscreenClose');
+        const payModal = document.getElementById('payChoice');
+        const payButtonsDiv = document.getElementById('payButtons');
+        const paymentStatusDiv = document.getElementById('paymentStatusMsg');
+        const closePayBtn = document.getElementById('closePayModalBtn');
+        
+        let currentFullscreenData = { media: [], currentIndex: 0 };
+        let closeButtonTimer = null;
+        let currentProductForPay = { id: null, title: '', pointsPrice: null };
+        const thumbnailCache = new Map();
+        const PAGE_SIZE = 5;
+        let loadedProducts = [];
+        let nextPage = 1;
+        let hasMore = true;
+        let loadingMore = false;
+        let initialLoadDone = false;
+        let infiniteObserver = null;
+
+        const shopScrollSentinel = document.getElementById('shopScrollSentinel');
+        const shopLoadStatus = document.getElementById('shopLoadStatus');
+        const shopEndHint = document.getElementById('shopEndHint');
+        
+        let touchStartX = 0, touchStartY = 0, isSwiping = false;
+        
+        function extractBilibiliUrl(bilibiliField) {
+            if (!bilibiliField) return null;
+            if (bilibiliField.startsWith('http')) return bilibiliField;
+            const bvMatch = bilibiliField.match(/^(BV\w+)$/i);
+            if (bvMatch) return `https://www.bilibili.com/video/${bvMatch[1]}`;
+            return null;
+        }
+        
+        async function captureVideoFrame(videoUrl) {
+            return new Promise((resolve, reject) => {
+                if (thumbnailCache.has(videoUrl)) return resolve(thumbnailCache.get(videoUrl));
+                const video = document.createElement('video');
+                video.crossOrigin = 'Anonymous';
+                video.src = videoUrl;
+                video.preload = 'auto';
+                video.muted = true;
+                video.playsInline = true;
+                video.style.display = 'none';
+                document.body.appendChild(video);
+                let timeoutId = setTimeout(() => { cleanup(); reject(new Error('超时')); }, 10000);
+                const cleanup = () => {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (video.parentNode) video.parentNode.removeChild(video);
+                };
+                video.addEventListener('loadeddata', () => { video.currentTime = 0.1; });
+                video.addEventListener('seeked', () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 320;
+                        canvas.height = video.videoHeight || 180;
+                        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        thumbnailCache.set(videoUrl, dataUrl);
+                        cleanup();
+                        resolve(dataUrl);
+                    } catch (err) { cleanup(); reject(err); }
+                });
+                video.addEventListener('error', () => { cleanup(); reject(new Error('加载失败')); });
+                video.load();
+            });
+        }
+        
+        function openPayModal(productId, productTitle, pointsPrice) {
+            if (!productId) return;
+            currentProductForPay = { id: productId, title: productTitle, pointsPrice: pointsPrice || null };
+            paymentStatusDiv.style.display = 'none';
+            paymentStatusDiv.innerHTML = '';
+            paymentStatusDiv.className = 'payment-status';
+            let buttonsHtml = `
+                <button class="pay-option-btn alipay" data-type="2">
+                    <span class="pay-option-icon">💳</span>
+                    <span>支付宝支付</span>
+                </button>
+                <button class="pay-option-btn wxpay" data-type="1">
+                    <span class="pay-option-icon">💬</span>
+                    <span>微信支付</span>
+                </button>`;
+            if (pointsPrice > 0) {
+                buttonsHtml += `
+                <button class="pay-option-btn points-redeem" data-type="points">
+                    <span class="pay-option-icon">🪙</span>
+                    <span>积分兑换 (${pointsPrice} 积分)</span>
+                </button>`;
+            }
+            payButtonsDiv.innerHTML = buttonsHtml;
+            const methodBtns = document.querySelectorAll('.pay-option-btn');
+            methodBtns.forEach(btn => {
+                btn.removeEventListener('click', handlePayClick);
+                btn.addEventListener('click', handlePayClick);
+            });
+            payModal.style.display = 'block';
+        }
+        
+        async function handlePayClick(e) {
+            const btn = e.currentTarget;
+            const payType = btn.dataset.type;
+            if (payType === 'points') {
+                return handlePointsRedeem();
+            }
+            const payTypeNum = parseInt(payType, 10);
+            if (isNaN(payTypeNum)) return;
+            
+            payButtonsDiv.style.display = 'none';
+            paymentStatusDiv.style.display = 'block';
+            paymentStatusDiv.innerHTML = '⏳ 正在创建订单请稍后';
+            paymentStatusDiv.className = 'payment-status loading';
+            
+            try {
+                const response = await fetch('/api/pay/create', { 
+                    method: 'POST',
+                    headers: Auth.authHeaders({ 'Content-Type': 'application/json' }), 
+                    body: JSON.stringify({ 
+                        productId: currentProductForPay.id, 
+                        type: payTypeNum 
+                    }),
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    paymentStatusDiv.innerHTML = '✅ 创建订单成功';
+                    paymentStatusDiv.className = 'payment-status success';
+                    setTimeout(() => {
+                        closePayModalImmediately();
+                        const payId = result.payId;
+                        window.location.href = `payPage/pay.html?payId=${payId}`;
+                    }, 800);
+                } else {
+                    paymentStatusDiv.innerHTML = `❌ 创建失败: ${result.message || result.error || '请检查后端服务'}`;
+                    paymentStatusDiv.className = 'payment-status';
+                    setTimeout(() => {
+                        if (payModal.style.display === 'block') {
+                            payButtonsDiv.style.display = 'flex';
+                            paymentStatusDiv.style.display = 'none';
+                        }
+                    }, 2000);
+                }
+            } catch (err) {
+                paymentStatusDiv.innerHTML = `❌ 网络错误: ${err.message}`;
+                paymentStatusDiv.className = 'payment-status';
+                setTimeout(() => {
+                    if (payModal.style.display === 'block') {
+                        payButtonsDiv.style.display = 'flex';
+                        paymentStatusDiv.style.display = 'none';
+                    }
+                }, 2000);
+            }
+        }
+
+        async function handlePointsRedeem() {
+            if (!Auth.isLoggedIn()) {
+                paymentStatusDiv.style.display = 'block';
+                paymentStatusDiv.innerHTML = '请先 <a href="/login.html?redirect=/minecraft-shop.html" style="color:#ffd966">登录</a> 后再兑换';
+                paymentStatusDiv.className = 'payment-status';
+                return;
+            }
+            payButtonsDiv.style.display = 'none';
+            paymentStatusDiv.style.display = 'block';
+            paymentStatusDiv.innerHTML = '⏳ 正在兑换...';
+            paymentStatusDiv.className = 'payment-status loading';
+            try {
+                const result = await Auth.api('/api/points/redeem', {
+                    method: 'POST',
+                    body: JSON.stringify({ productId: currentProductForPay.id })
+                });
+                if (result.success) {
+                    paymentStatusDiv.innerHTML = '✅ ' + (result.msg || '兑换成功');
+                    paymentStatusDiv.className = 'payment-status success';
+                    await Auth.refreshMe();
+                    setTimeout(() => {
+                        closePayModalImmediately();
+                        window.location.href = result.redirect;
+                    }, 800);
+                } else {
+                    paymentStatusDiv.innerHTML = `❌ ${result.msg || '兑换失败'}`;
+                    paymentStatusDiv.className = 'payment-status';
+                    setTimeout(() => {
+                        if (payModal.style.display === 'block') {
+                            payButtonsDiv.style.display = 'flex';
+                            paymentStatusDiv.style.display = 'none';
+                        }
+                    }, 2500);
+                }
+            } catch (err) {
+                paymentStatusDiv.innerHTML = `❌ 网络错误: ${err.message}`;
+                paymentStatusDiv.className = 'payment-status';
+            }
+        }
+        
+        function closePayModalImmediately() {
+            payModal.style.display = 'none';
+            payButtonsDiv.style.display = 'flex';
+            paymentStatusDiv.style.display = 'none';
+            paymentStatusDiv.innerHTML = '';
+            paymentStatusDiv.className = 'payment-status';
+            currentProductForPay = { id: null, title: '', pointsPrice: null };
+        }
+        function closePayModal() { closePayModalImmediately(); }
+        if (closePayBtn) closePayBtn.addEventListener('click', closePayModal);
+        payModal.addEventListener('click', (e) => { if (e.target === payModal) closePayModal(); });
+        
+        function stopAllVideos() { document.querySelectorAll('video').forEach(v => { v.pause(); v.currentTime = 0; }); }
+        
+        function playVideoInFullscreen(slideElement, url, thumbnailUrl) {
+            if (slideElement.querySelector('video')) return;
+            slideElement.innerHTML = '';
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            video.autoplay = true;
+            video.style.maxWidth = '100%';
+            video.style.maxHeight = '100%';
+            video.style.objectFit = 'contain';
+            if (thumbnailUrl && thumbnailUrl !== url) {
+                video.poster = thumbnailUrl;
+            }
+            slideElement.appendChild(video);
+            video.play().catch(e => console.log('播放失败:', e));
+        }
+        
+        function openFullscreen(mediaArray, startIndex) {
+            if (!mediaArray?.length) return;
+            stopAllVideos();
+            currentFullscreenData = { media: mediaArray, currentIndex: startIndex };
+            let slidesHtml = '';
+            mediaArray.forEach((item, idx) => {
+                const thumbnailUrl = item.thumbnail || item.url;
+                if (item.type === 'video') {
+                    slidesHtml += `<div class="fullscreen-slide" data-index="${idx}" data-type="video" data-url="${item.url}" data-thumbnail="${thumbnailUrl}"><div class="video-thumbnail" style="background-image: url('${thumbnailUrl}'); background-size: contain; background-position: center; background-repeat: no-repeat;"></div></div>`;
+                } else {
+                    slidesHtml += `<div class="fullscreen-slide" data-index="${idx}" data-type="image"><img src="${item.url}" alt="作品"></div>`;
+                }
+            });
+            fullscreenTrack.innerHTML = slidesHtml;
+            
+            document.querySelectorAll('.fullscreen-slide[data-type="video"]').forEach(slide => {
+                const thumbnail = slide.querySelector('.video-thumbnail');
+                const url = slide.dataset.url;
+                const thumbUrl = slide.dataset.thumbnail;
+                if (thumbnail) {
+                    thumbnail.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        playVideoInFullscreen(slide, url, thumbUrl);
+                    });
+                }
+            });
+            
+            updateFullscreenPosition(startIndex);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            resetCloseButtonTimer();
+            initSwipeListeners();
+        }
+        
+        function initSwipeListeners() {
+            const track = fullscreenTrack;
+            if (!track) return;
+            
+            const handleTouchStart = (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                isSwiping = true;
+                track.style.transition = 'none';
+            };
+            
+            const handleTouchMove = (e) => {
+                if (!isSwiping) return;
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                    e.preventDefault();
+                    const currentOffset = -currentFullscreenData.currentIndex * window.innerWidth;
+                    track.style.transform = `translateX(${currentOffset + deltaX}px)`;
+                }
+            };
+            
+            const handleTouchEnd = (e) => {
+                if (!isSwiping) return;
+                isSwiping = false;
+                track.style.transition = 'transform 0.3s ease-out';
+                const endX = e.changedTouches[0].clientX;
+                const deltaX = endX - touchStartX;
+                const threshold = window.innerWidth * 0.2;
+                
+                if (Math.abs(deltaX) > threshold) {
+                    if (deltaX > 0) {
+                        updateFullscreenPosition(currentFullscreenData.currentIndex - 1);
+                    } else {
+                        updateFullscreenPosition(currentFullscreenData.currentIndex + 1);
+                    }
+                } else {
+                    updateFullscreenPosition(currentFullscreenData.currentIndex);
+                }
+                resetCloseButtonTimer();
+            };
+            
+            track.removeEventListener('touchstart', handleTouchStart);
+            track.removeEventListener('touchmove', handleTouchMove);
+            track.removeEventListener('touchend', handleTouchEnd);
+            track.addEventListener('touchstart', handleTouchStart, { passive: false });
+            track.addEventListener('touchmove', handleTouchMove, { passive: false });
+            track.addEventListener('touchend', handleTouchEnd);
+        }
+        
+        function closeFullscreen() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            if (closeButtonTimer) clearTimeout(closeButtonTimer);
+            fullscreenClose.classList.remove('hidden');
+            stopAllVideos();
+        }
+        
+        function updateFullscreenPosition(index) {
+            const total = currentFullscreenData.media.length;
+            if (!total) return;
+            index = (index + total) % total;
+            currentFullscreenData.currentIndex = index;
+            fullscreenTrack.style.transform = `translateX(-${index * 100}%)`;
+            document.querySelectorAll('.fullscreen-slide video').forEach(v => v.pause());
+        }
+        
+        function resetCloseButtonTimer() {
+            if (closeButtonTimer) clearTimeout(closeButtonTimer);
+            fullscreenClose.classList.remove('hidden');
+            closeButtonTimer = setTimeout(() => fullscreenClose.classList.add('hidden'), 3000);
+        }
+        
+        function escapeHtml(str) { return String(str ?? '').replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+        function productIdStr(prod) { return String(prod._id); }
+
+        function buildProductCardHTML(prod) {
+            const title = prod.title || '神秘作品';
+            const price = prod.price ?? '?';
+            const description = prod.description || '武韵匠心之作。';
+            const mediaArray = prod.media || [];
+            const productId = productIdStr(prod);
+
+            let bilibiliUrl = null;
+            if (prod.bilibiliUrl) bilibiliUrl = extractBilibiliUrl(prod.bilibiliUrl);
+            if (!bilibiliUrl && prod.bilibiliEmbed && prod.bilibiliEmbed.includes('bilibili')) {
+                const match = prod.bilibiliEmbed.match(/bvid=([^&]+)/);
+                if (match) bilibiliUrl = `https://www.bilibili.com/video/BV${match[1]}`;
+            }
+
+            let slidesHtml = '';
+            for (let idx = 0; idx < mediaArray.length; idx++) {
+                const item = mediaArray[idx];
+                if (item.type === 'video' && item.url) {
+                    slidesHtml += `<div class="carousel-slide video" id="thumb-${productId}-${idx}" data-type="video" data-url="${item.url}" data-index="${idx}" style="background: linear-gradient(135deg, #3d6a5a, #2a5545);"><span style="color:#ffdd99;">🎬 加载中</span></div>`;
+                } else if (item.type === 'image' && item.url) {
+                    slidesHtml += `<div class="carousel-slide" style="background-image: url('${item.url}'); background-size: cover; background-position: center;" data-type="image" data-url="${item.url}" data-index="${idx}"></div>`;
+                } else {
+                    slidesHtml += `<div class="carousel-slide empty">🐠 无媒体</div>`;
+                }
+            }
+            if (mediaArray.length === 0) slidesHtml = `<div class="carousel-slide empty">✨ 暂无预览</div>`;
+            const carouselId = `carousel-${productId.replace(/[^a-zA-Z0-9]/g, '')}`;
+            let dotsHtml = '';
+            if (mediaArray.length > 1) {
+                for (let i = 0; i < mediaArray.length; i++) dotsHtml += `<span class="dot" data-index="${i}"></span>`;
+            }
+            const mediaHtml = `<div class="media-carousel" id="${carouselId}" data-product-id="${productId}" data-media-count="${mediaArray.length}"><div class="carousel-viewport"><div class="carousel-track">${slidesHtml}</div>${mediaArray.length > 1 ? `<div class="carousel-arrow left" data-carousel="${carouselId}">◀</div><div class="carousel-arrow right" data-carousel="${carouselId}">▶</div>` : ''}</div>${mediaArray.length > 1 ? `<div class="carousel-dots">${dotsHtml}</div>` : ''}</div>`;
+
+            const biliButtonHtml = bilibiliUrl
+                ? `<button class="bili-button" data-bili-url="${escapeHtml(bilibiliUrl)}"><i class="fab fa-bilibili" style="font-size:1.2rem;"></i> 详情进入B站</button>`
+                : `<button class="bili-button disabled" disabled><i class="fab fa-bilibili" style="font-size:1.2rem;"></i> 暂无B站视频</button>`;
+
+            const pointsPrice = prod.pointsPrice;
+            let redeemBtnHtml = '';
+            if (pointsPrice > 0) {
+                redeemBtnHtml = `<button class="points-button" data-product-id="${productId}" data-product-title="${escapeHtml(title)}" data-points-price="${pointsPrice}"><span>积分换</span><span class="points-on-button">${pointsPrice} 积分</span></button>`;
+            }
+
+            const buttonsHtml = `<div class="button-group">${biliButtonHtml}${redeemBtnHtml}<div class="buy-button" data-product-id="${productId}" data-product-title="${escapeHtml(title)}" data-points-price="${pointsPrice || ''}"><span>购买</span><span class="price-on-button">¥${escapeHtml(price)}</span></div></div>`;
+
+            return `<div class="product-card" data-id="${productId}">${mediaHtml}<div class="info-area"><div class="product-title">${escapeHtml(title)}</div><div class="product-description">${escapeHtml(description).replace(/\n/g, '<br>')}</div></div>${buttonsHtml}</div>`;
+        }
+
+        function updateShopFooterUI() {
+            shopLoadStatus.classList.remove('is-visible');
+            shopEndHint.style.display = 'none';
+            if (!initialLoadDone) return;
+            if (loadingMore) {
+                shopLoadStatus.textContent = '加载更多…';
+                shopLoadStatus.classList.add('is-visible');
+            } else if (!hasMore && loadedProducts.length > 0) {
+                shopEndHint.style.display = 'block';
+            }
+        }
+
+        async function hydrateAppendedCards(productsBatch) {
+            const idSet = new Set(productsBatch.map(productIdStr));
+            const newCards = Array.from(grid.querySelectorAll('.product-card')).filter(c => idSet.has(c.getAttribute('data-id')));
+
+            for (const card of newCards) {
+                for (const slide of card.querySelectorAll('.carousel-slide[data-type="video"]')) {
+                    const url = slide.dataset.url;
+                    if (!url) continue;
+                    try {
+                        const frame = await captureVideoFrame(url);
+                        slide.style.backgroundImage = `url('${frame}')`;
+                        slide.style.backgroundSize = 'cover';
+                        slide.innerHTML = '';
+                    } catch (e) {
+                        slide.innerHTML = '<div style="color:#ffb347;">⚠️ 预览失败</div>';
+                    }
+                }
+            }
+
+            newCards.forEach(card => {
+                const car = card.querySelector('.media-carousel');
+                if (!car) return;
+                const track = car.querySelector('.carousel-track');
+                const slides = car.querySelectorAll('.carousel-slide');
+                const prev = car.querySelector('.carousel-arrow.left');
+                const nextBtn = car.querySelector('.carousel-arrow.right');
+                const dots = car.querySelectorAll('.dot');
+                const total = slides.length;
+                const pid = car.dataset.productId;
+                const product = loadedProducts.find(p => productIdStr(p) === pid);
+
+                if (total > 1) {
+                    let cur = 0;
+                    const update = (idx) => {
+                        cur = (idx + total) % total;
+                        track.style.transform = `translateX(-${cur * 100}%)`;
+                        dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+                    };
+                    if (prev) prev.addEventListener('click', (e) => { e.stopPropagation(); update(cur - 1); });
+                    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); update(cur + 1); });
+                    dots.forEach((d, i) => d.addEventListener('click', (e) => { e.stopPropagation(); update(i); }));
+                    update(0);
+                }
+
+                if (product && product.media && product.media.length) {
+                    car.addEventListener('click', (e) => {
+                        if (e.target.closest('.carousel-arrow') || e.target.closest('.dot')) return;
+                        let currentIndex = 0;
+                        if (total > 1 && track) {
+                            const transform = track.style.transform;
+                            const match = transform.match(/translateX\(-([0-9]+)%/);
+                            if (match) currentIndex = Math.floor(parseInt(match[1], 10) / 100);
+                        }
+                        openFullscreen(product.media, currentIndex);
+                    });
+                }
+
+                card.querySelectorAll('.bili-button:not(.disabled)').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const biliUrl = btn.dataset.biliUrl;
+                        if (biliUrl) window.open(biliUrl, '_blank');
+                    });
+                });
+
+                const buyBtn = card.querySelector('.buy-button');
+                if (buyBtn) {
+                    buyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const productId = buyBtn.dataset.productId;
+                        const productTitle = buyBtn.dataset.productTitle || '商品';
+                        const pointsPrice = buyBtn.dataset.pointsPrice ? Number(buyBtn.dataset.pointsPrice) : null;
+                        if (productId) openPayModal(productId, productTitle, pointsPrice);
+                        else alert('商品信息缺失');
+                    });
+                }
+
+                const ptsBtn = card.querySelector('.points-button');
+                if (ptsBtn) {
+                    ptsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const productId = ptsBtn.dataset.productId;
+                        const productTitle = ptsBtn.dataset.productTitle || '商品';
+                        const pointsPrice = Number(ptsBtn.dataset.pointsPrice);
+                        if (productId && pointsPrice > 0) openPayModal(productId, productTitle, pointsPrice);
+                    });
+                }
+            });
+        }
+
+        async function appendProductsBatch(products) {
+            if (!products || !products.length) return;
+            const html = products.map(buildProductCardHTML).join('');
+            grid.insertAdjacentHTML('beforeend', html);
+            await hydrateAppendedCards(products);
+        }
+
+        function setupInfiniteScroll() {
+            if (infiniteObserver || !shopScrollSentinel) return;
+            infiniteObserver = new IntersectionObserver((entries) => {
+                if (!entries[0].isIntersecting || loadingMore || !hasMore) return;
+                loadMoreProducts();
+            }, { root: null, rootMargin: '380px', threshold: 0 });
+            infiniteObserver.observe(shopScrollSentinel);
+        }
+
+        async function loadMoreProducts() {
+            if (loadingMore || !hasMore) return;
+            loadingMore = true;
+            updateShopFooterUI();
+            try {
+                const response = await fetch(`/products?page=${nextPage}&limit=${PAGE_SIZE}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (!data.success || !Array.isArray(data.products)) throw new Error('数据格式错误');
+                loadedProducts = loadedProducts.concat(data.products);
+                hasMore = data.hasMore === true;
+                await appendProductsBatch(data.products);
+                nextPage += 1;
+            } catch (err) {
+                console.error(err);
+                shopLoadStatus.textContent = '加载更多失败，下拉重试';
+                shopLoadStatus.classList.add('is-visible');
+            } finally {
+                loadingMore = false;
+                updateShopFooterUI();
+                if (infiniteObserver && shopScrollSentinel) {
+                    infiniteObserver.unobserve(shopScrollSentinel);
+                    requestAnimationFrame(() => {
+                        infiniteObserver.observe(shopScrollSentinel);
+                    });
+                }
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                grid.innerHTML = `<div class="loading-placeholder">🌊 深海搬运中...</div>`;
+                shopEndHint.style.display = 'none';
+                loadedProducts = [];
+                nextPage = 1;
+                hasMore = true;
+                initialLoadDone = false;
+
+                const response = await fetch(`/products?page=1&limit=${PAGE_SIZE}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (!data.success || !Array.isArray(data.products)) {
+                    grid.innerHTML = `<div class="error-toast">⚠️ 商品数据格式错误，请检查后端</div>`;
+                    return;
+                }
+
+                grid.innerHTML = '';
+                loadedProducts = data.products.slice();
+                hasMore = data.hasMore === true;
+                nextPage = 2;
+                initialLoadDone = true;
+
+                if (!data.products.length) {
+                    grid.innerHTML = `<div class="empty-state">🌊 深海暂无宝藏，稍后再来～</div>`;
+                    hasMore = false;
+                    updateShopFooterUI();
+                    setupInfiniteScroll();
+                    return;
+                }
+
+                await appendProductsBatch(data.products);
+                updateShopFooterUI();
+                setupInfiniteScroll();
+            } catch (err) {
+                grid.innerHTML = `<div class="error-toast">❌ 加载失败: ${err.message}<br>请确保后端服务已启动</div>`;
+            }
+        }
+        
+        fullscreenClose.addEventListener('click', closeFullscreen);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeFullscreen(); });
+        document.addEventListener('keydown', (e) => {
+            if (!modal.classList.contains('active')) return;
+            if (e.key === 'Escape') closeFullscreen();
+        });
+        loadProducts();
+    })();
+</script>
+<script src="/js/auth.js"></script>
+<script>Auth.mountUserBar();</script>
+</body>
+</html>

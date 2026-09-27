@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 · 武韵|指令</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; padding: 5rem 1rem 3rem;
+      background: #1a1a2e url('/scb/wallpapers_minecraft_island/wallpaper_minecraft_island_1920x1080.png') center/cover fixed;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #eee;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 0; }
+    .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+    h1 { text-align: center; color: #7cb518; margin-bottom: 1.5rem; }
+    .profile-card {
+      background: rgba(30,40,35,0.9); border-radius: 20px;
+      border: 1px solid rgba(124,181,24,0.3); padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .profile-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, #7cb518, #5a9e0e);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 800;
+    }
+    .profile-name { font-size: 1.3rem; font-weight: 700; }
+    .profile-user { color: #888; font-size: 0.85rem; }
+    .points-badge {
+      margin-left: auto; background: rgba(255,217,102,0.15);
+      border: 1px solid rgba(255,217,102,0.4); border-radius: 20px;
+      padding: 8px 16px; color: #ffd966; font-weight: 700;
+    }
+    .quick-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem; }
+    .quick-link {
+      flex: 1; min-width: 120px; text-align: center; padding: 12px;
+      background: rgba(0,0,0,0.3); border-radius: 12px;
+      color: #ccc; text-decoration: none; font-size: 0.9rem;
+    }
+    .quick-link:hover { background: rgba(124,181,24,0.2); color: #fff; }
+    .section { margin-bottom: 1.5rem; }
+    .section-title {
+      font-size: 1rem; color: #a3e635; margin-bottom: 0.8rem;
+      padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .form-row { margin-bottom: 0.8rem; }
+    .form-row label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
+    .form-row input {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: #fff;
+    }
+    .btn {
+      padding: 10px 20px; border: none; border-radius: 10px;
+      background: #7cb518; color: #fff; font-weight: 600; cursor: pointer;
+    }
+    .list-item {
+      background: rgba(0,0,0,0.25); border-radius: 10px;
+      padding: 12px; margin-bottom: 8px; font-size: 0.85rem;
+    }
+    .list-item .title { font-weight: 600; color: #fff; }
+    .list-item .meta { color: #888; margin-top: 4px; font-size: 0.8rem; }
+    .amount-pos { color: #a3e635; }
+    .amount-neg { color: #ff8888; }
+    .empty { color: #666; text-align: center; padding: 1rem; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 16px; border: none; border-radius: 20px;
+      background: rgba(0,0,0,0.3); color: #aaa; cursor: pointer;
+    }
+    .tab-btn.active { background: #7cb518; color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .back-link { display: block; text-align: center; margin-top: 2rem; color: #aaa; text-decoration: none; }
+    .msg { margin-top: 8px; font-size: 0.85rem; }
+    .msg.ok { color: #a3e635; }
+    .msg.err { color: #ff8888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-user"></i> 个人中心</h1>
+
+    <div class="profile-card" id="profileCard">
+      <div class="profile-header">
+        <div class="avatar" id="avatar">?</div>
+        <div>
+          <div class="profile-name" id="displayName">加载中...</div>
+          <div class="profile-user" id="username">@</div>
+        </div>
+        <div class="points-badge"><i class="fas fa-coins"></i> <span id="pointsNum">0</span></div>
+      </div>
+      <div class="quick-links">
+        <a href="/points-earn.html" class="quick-link"><i class="fas fa-coins"></i> 赚积分</a>
+        <a href="/minecraft-shop.html" class="quick-link"><i class="fas fa-store"></i> 作品商店</a>
+        <a href="/custom-hall.html" class="quick-link"><i class="fas fa-pen-ruler"></i> 我的委托</a>
+        <a href="/guestbook.html" class="quick-link"><i class="fas fa-message"></i> 留言板</a>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="profile">资料设置</button>
+      <button class="tab-btn" data-tab="points">积分记录</button>
+      <button class="tab-btn" data-tab="orders">我的订单</button>
+      <button class="tab-btn" data-tab="custom">我的委托</button>
+    </div>
+
+    <div class="profile-card tab-panel active" id="tab-profile">
+      <div class="section-title">基本资料</div>
+      <div class="form-row"><label>昵称</label><input id="editNickname"></div>
+      <div class="form-row"><label>邮箱</label><input id="editEmail" type="email"></div>
+      <div class="form-row"><label>QQ</label><input id="editQq"></div>
+      <div class="form-row"><label>微信</label><input id="editWechat"></div>
+      <button class="btn" id="saveProfileBtn">保存资料</button>
+      <div class="msg" id="profileMsg"></div>
+
+      <div class="section" style="margin-top:1.5rem">
+        <div class="section-title">修改密码</div>
+        <div class="form-row"><label>原密码</label><input id="oldPassword" type="password"></div>
+        <div class="form-row"><label>新密码</label><input id="newPassword" type="password"></div>
+        <button class="btn" id="changePwdBtn">修改密码</button>
+        <div class="msg" id="pwdMsg"></div>
+      </div>
+    </div>
+
+    <div class="profile-card tab-panel" id="tab-points">
+      <div class="section-title">积分变动记录</div>
+      <div id="pointsList"><div class="empty">加载中...</div></div>
+    </div>
+
+    <div class="profile-card tab-panel" id="tab-orders">
+      <div class="section-title">购买 / 兑换记录</div>
+      <div id="ordersList"><div class="empty">加载中...</div></div>
+    </div>
+
+    <div class="profile-card tab-panel" id="tab-custom">
+      <div class="section-title">委托记录</div>
+      <div id="customList"><div class="empty">加载中...</div></div>
+    </div>
+
+    <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    Auth.mountUserBar()
+
+    if (!Auth.isLoggedIn()) {
+      location.href = "/login.html?redirect=/user-center.html"
+    }
+
+    const STATUS_MAP = {
+      pending: "待处理", accepted: "制作中", completed: "已完成", rejected: "已拒绝"
+    }
+    const ORDER_STATUS = { paid: "已支付", pending: "待支付" }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn))
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === `tab-${btn.dataset.tab}`))
+      })
+    })
+
+    async function loadProfile() {
+      const user = await Auth.refreshMe()
+      if (!user) { location.href = "/login.html"; return }
+
+      document.getElementById("avatar").textContent = (user.nickname || user.username)[0].toUpperCase()
+      document.getElementById("displayName").textContent = user.nickname || user.username
+      document.getElementById("username").textContent = "@" + user.username
+      document.getElementById("pointsNum").textContent = user.points || 0
+      document.getElementById("editNickname").value = user.nickname || ""
+      document.getElementById("editEmail").value = user.email || ""
+      document.getElementById("editQq").value = user.qq || ""
+      document.getElementById("editWechat").value = user.wechat || ""
+    }
+
+    document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+      const msg = document.getElementById("profileMsg")
+      const data = await Auth.api("/api/auth/profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          nickname: document.getElementById("editNickname").value,
+          email: document.getElementById("editEmail").value,
+          qq: document.getElementById("editQq").value,
+          wechat: document.getElementById("editWechat").value
+        })
+      })
+      msg.className = "msg " + (data.success ? "ok" : "err")
+      msg.textContent = data.success ? "保存成功" : (data.msg || "失败")
+      if (data.success) loadProfile()
+    })
+
+    document.getElementById("changePwdBtn").addEventListener("click", async () => {
+      const msg = document.getElementById("pwdMsg")
+      const data = await Auth.api("/api/auth/password", {
+        method: "PUT",
+        body: JSON.stringify({
+          oldPassword: document.getElementById("oldPassword").value,
+          newPassword: document.getElementById("newPassword").value
+        })
+      })
+      msg.className = "msg " + (data.success ? "ok" : "err")
+      msg.textContent = data.success ? "密码已修改" : (data.msg || "失败")
+    })
+
+    async function loadPointsHistory() {
+      const data = await Auth.api("/api/points/history")
+      const el = document.getElementById("pointsList")
+      if (!data.success || !data.records?.length) {
+        el.innerHTML = '<div class="empty">暂无积分记录</div>'
+        return
+      }
+      el.innerHTML = data.records.map(r => `
+        <div class="list-item">
+          <div class="title ${r.amount > 0 ? "amount-pos" : "amount-neg"}">
+            ${r.amount > 0 ? "+" : ""}${r.amount} 积分
+          </div>
+          <div class="meta">${r.description || r.type} · 余额 ${r.balanceAfter} · ${new Date(r.createdAt).toLocaleString()}</div>
+        </div>`).join("")
+    }
+
+    async function loadOrders() {
+      const data = await Auth.api("/api/points/my-orders")
+      const el = document.getElementById("ordersList")
+      if (!data.success || !data.data?.length) {
+        el.innerHTML = '<div class="empty">暂无订单</div>'
+        return
+      }
+      el.innerHTML = data.data.map(o => `
+        <div class="list-item">
+          <div class="title">${o.productName}</div>
+          <div class="meta">
+            ${o.orderType === "points" ? `积分兑换 (${o.pointsUsed} 积分)` : `¥${o.price}`}
+            · ${o.submitAt ? "已提交资料" : "待提交资料"}
+            · ${new Date(o.paidAt || o.createdAt).toLocaleString()}
+          </div>
+        </div>`).join("")
+    }
+
+    async function loadCustomOrders() {
+      const data = await Auth.api("/api/custom/my")
+      const el = document.getElementById("customList")
+      if (!data.success || !data.data?.length) {
+        el.innerHTML = '<div class="empty">暂无委托记录</div>'
+        return
+      }
+      el.innerHTML = data.data.map(o => `
+        <div class="list-item">
+          <div class="title">${o.title}</div>
+          <div class="meta">预算 ¥${o.budget} · ${STATUS_MAP[o.status] || o.status} · ${new Date(o.createdAt).toLocaleString()}</div>
+        </div>`).join("")
+    }
+
+    loadProfile()
+    loadPointsHistory()
+    loadOrders()
+    loadCustomOrders()
+  </script>
+</body>
+</html>
