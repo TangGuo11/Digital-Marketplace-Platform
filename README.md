@@ -422,7 +422,7 @@ digital-marketplace/
 Clone the repository:
 
 ```bash
-git clone https://github.com/TangGuo11/Digital-Marketplace-Platform.git/digital-marketplace.git
+git clone https://github.com/TangGuo11/Digital-Marketplace-Platform.git
 
 cd digital-marketplace
 ```
